@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Home | VivaRepo{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>From repos to mastery</h1>
+    <p class="intro">
+        VivaRepo helps you explore projects, understand unfamiliar code, and build
+        practical skills from the work already in front of you.
+    </p>
+    <div class="actions">
+        <a class="button button-primary" href="{% url 'projects:about' %}">About</a>
+        <a class="button button-secondary" href="{% url 'projects:trydemo' %}">Try Demo</a>
+        <a class="button button-secondary" href="{% url 'projects:signup' %}">Sign Up</a>
+    </div>
+</section>
+{% endblock %}

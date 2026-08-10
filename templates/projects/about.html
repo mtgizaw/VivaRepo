@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}About | VivaRepo{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <p class="eyebrow">About the project</p>
+    <h1>Learning grounded in real code.</h1>
+    <p>
+        VivaRepo is a local-first learning environment designed to turn software
+        repositories into guided tutorials, assessments, and mastery plans.
+    </p>
+    <a class="text-link" href="{% url 'projects:home' %}">&larr; Return home</a>
+</section>
+{% endblock %}
