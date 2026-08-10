@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+IS_RENDER = bool(os.getenv("RENDER"))
 
 # The fallback is intended only for local development. Deployments must supply
 # DJANGO_SECRET_KEY through the environment.
@@ -12,7 +13,10 @@ SECRET_KEY = os.getenv(
     "vivarepo-local-development-key-change-before-deployment",
 )
 
-DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() in {"1", "true", "yes", "on"}
+DEBUG = os.getenv(
+    "DJANGO_DEBUG",
+    "false" if IS_RENDER else "true",
+).lower() in {"1", "true", "yes", "on"}
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -22,6 +26,11 @@ ALLOWED_HOSTS = [
     ).split(",")
     if host.strip()
 ]
+
+# Render supplies the public service hostname automatically at runtime.
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -83,4 +92,3 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
