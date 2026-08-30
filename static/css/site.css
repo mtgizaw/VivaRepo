@@ -362,6 +362,102 @@ h1 {
     text-align: center;
 }
 
+.dashboard {
+    max-width: 860px;
+    margin: clamp(2.5rem, 8vh, 5rem) auto 4rem;
+}
+
+.dashboard-heading {
+    max-width: 680px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.dashboard-heading .eyebrow {
+    margin: 0 0 0.75rem;
+}
+
+.dashboard-heading h1 {
+    font-size: clamp(2.5rem, 7vw, 4.5rem);
+}
+
+.dashboard-heading > p:last-child {
+    margin: 1rem auto 0;
+    color: #596983;
+    font-size: 1.1rem;
+    line-height: 1.65;
+}
+
+.metric-card {
+    overflow: hidden;
+    border: 1px solid #dce3ef;
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 24px 60px rgba(31, 49, 86, 0.12);
+}
+
+.metric-chart,
+.metric-chart > div,
+.metric-chart .plotly-graph-div {
+    width: 100% !important;
+}
+
+.metric-fallback {
+    margin: 2rem;
+    color: #101a32;
+    font-size: clamp(4rem, 12vw, 6rem);
+    font-weight: 800;
+    text-align: center;
+}
+
+.metric-details {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #e4e9f2;
+    color: #596983;
+    background: #f8faff;
+    font-size: 0.9rem;
+}
+
+.metric-details p {
+    margin: 0;
+}
+
+.status-chip {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid #ccd7f6;
+    border-radius: 999px;
+    color: #2647bd;
+    background: #edf2ff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.status-chip span {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: #3155d9;
+}
+
+.dashboard-note {
+    max-width: 640px;
+    margin: 1.25rem auto 0;
+    color: #65748c;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
 @media (max-width: 600px) {
     .site-header,
     main {
@@ -375,5 +471,20 @@ h1 {
     .auth-card {
         margin-top: 1rem;
         border-radius: 1.1rem;
+    }
+
+    .site-header {
+        align-items: flex-start;
+    }
+
+    nav {
+        justify-content: flex-end;
+        gap: 0.75rem 1rem;
+        flex-wrap: wrap;
+    }
+
+    .metric-details {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }

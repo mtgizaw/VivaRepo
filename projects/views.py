@@ -1,12 +1,59 @@
 """Views for the VivaRepo web experience and local authentication."""
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
+import plotly.graph_objects as go
+from plotly.io import to_html
 
 from .forms import EmailLoginForm, SignupForm
+
+
+User = get_user_model()
+
+
+def build_account_count_chart(account_count: int) -> str:
+    """Return an embeddable Plotly indicator for the current account total."""
+    figure = go.Figure(
+        go.Indicator(
+            mode="number",
+            value=account_count,
+            number={
+                "font": {"color": "#101a32", "size": 88},
+                "valueformat": ",d",
+            },
+            title={
+                "font": {"color": "#596983", "size": 18},
+                "text": "Registered accounts",
+            },
+        )
+    )
+    figure.update_layout(
+        autosize=True,
+        height=280,
+        margin={"b": 20, "l": 20, "r": 20, "t": 40},
+        paper_bgcolor="rgba(0, 0, 0, 0)",
+        plot_bgcolor="rgba(0, 0, 0, 0)",
+        font={
+            "family": (
+                "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "
+                "'Segoe UI', sans-serif"
+            )
+        },
+    )
+    return to_html(
+        figure,
+        config={
+            "displayModeBar": False,
+            "responsive": True,
+        },
+        div_id="account-count-chart",
+        full_html=False,
+        include_plotlyjs="cdn",
+    )
 
 
 def home(request: HttpRequest) -> HttpResponse:
@@ -17,6 +64,19 @@ def home(request: HttpRequest) -> HttpResponse:
 def about(request: HttpRequest) -> HttpResponse:
     """Explain the purpose and boundaries of VivaRepo."""
     return render(request, "projects/about.html")
+
+
+def account_dashboard(request: HttpRequest) -> HttpResponse:
+    """Show the live number of accounts in Django's configured user model."""
+    account_count = User.objects.count()
+    return render(
+        request,
+        "projects/dashboard.html",
+        {
+            "account_count": account_count,
+            "account_count_chart": build_account_count_chart(account_count),
+        },
+    )
 
 
 def try_demo(request: HttpRequest) -> HttpResponse:

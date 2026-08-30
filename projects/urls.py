@@ -9,6 +9,7 @@ app_name = "projects"
 urlpatterns = [
     path("", views.home, name="home"),
     path("about/", views.about, name="about"),
+    path("dashboard/", views.account_dashboard, name="dashboard"),
     path("trydemo/", views.try_demo, name="trydemo"),
     path("signup/", views.signup, name="signup"),
     path("login/", views.login_view, name="login"),
