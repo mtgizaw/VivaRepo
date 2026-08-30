@@ -1,8 +1,9 @@
 """Authentication and foundation smoke tests."""
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 
 User = get_user_model()
@@ -22,6 +23,12 @@ class FoundationSmokeTests(TestCase):
 
 class AuthenticationTests(TestCase):
     password = "StrongPass-2026!"
+
+    def test_social_login_redirects_to_an_existing_page(self):
+        redirect_url = reverse(settings.LOGIN_REDIRECT_URL)
+
+        self.assertEqual(redirect_url, reverse("projects:home"))
+        self.assertEqual(resolve(redirect_url).view_name, "projects:home")
 
     def test_social_login_buttons_link_to_provider_routes(self):
         for page_name in ("projects:signup", "projects:login"):
