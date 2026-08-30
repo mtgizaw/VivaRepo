@@ -34,6 +34,7 @@ body {
 
 nav {
     display: flex;
+    align-items: center;
     gap: 1.25rem;
 }
 
@@ -46,6 +47,29 @@ nav a,
 
 nav a:hover,
 .text-link:hover {
+    color: #3155d9;
+}
+
+.nav-user {
+    color: #24324b;
+    font-weight: 750;
+}
+
+.nav-form {
+    margin: 0;
+}
+
+.nav-button {
+    padding: 0;
+    border: 0;
+    color: #40516f;
+    background: transparent;
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.nav-button:hover {
     color: #3155d9;
 }
 
@@ -200,6 +224,11 @@ h1 {
     background: #f8faff;
 }
 
+.social-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
 .auth-divider {
     display: flex;
     align-items: center;
@@ -258,6 +287,24 @@ h1 {
 
 .form-field small {
     color: #71809a;
+}
+
+.form-errors,
+.errorlist {
+    color: #9c1c1c;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.form-errors .errorlist,
+.form-field .errorlist,
+.auth-form > .errorlist {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.form-field input[aria-invalid="true"] {
+    border-color: #b42318;
 }
 
 .checkbox-field {
