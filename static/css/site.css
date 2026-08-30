@@ -203,6 +203,10 @@ h1 {
     gap: 0.75rem;
 }
 
+.social-login-form {
+    margin: 0;
+}
+
 .social-button {
     display: flex;
     align-items: center;
@@ -216,17 +220,13 @@ h1 {
     background: #fff;
     font: inherit;
     font-weight: 700;
+    text-decoration: none;
     cursor: pointer;
 }
 
 .social-button:hover {
     border-color: #9caac1;
     background: #f8faff;
-}
-
-.social-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.55;
 }
 
 .auth-divider {

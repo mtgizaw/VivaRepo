@@ -23,6 +23,15 @@ class FoundationSmokeTests(TestCase):
 class AuthenticationTests(TestCase):
     password = "StrongPass-2026!"
 
+    def test_social_login_buttons_link_to_provider_routes(self):
+        for page_name in ("projects:signup", "projects:login"):
+            with self.subTest(page=page_name):
+                response = self.client.get(reverse(page_name))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "/accounts/google/login/")
+                self.assertContains(response, "/accounts/github/login/")
+                self.assertNotContains(response, "disabled")
+
     def test_signup_stores_hashed_password_and_logs_user_in(self):
         response = self.client.post(
             reverse("projects:signup"),

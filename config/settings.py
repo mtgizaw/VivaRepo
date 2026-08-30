@@ -3,7 +3,11 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
 IS_RENDER = bool(os.getenv("RENDER"))
 
 # The fallback is intended only for local development. Deployments must supply
@@ -26,6 +30,11 @@ ALLOWED_HOSTS = [
     ).split(",")
     if host.strip()
 ]
+
+if not IS_RENDER:
+    for local_host in ("127.0.0.1", "localhost", "testserver"):
+        if local_host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(local_host)
 
 # Render supplies the public service hostname automatically at runtime.
 RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
@@ -62,7 +71,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
-if not DEBUG:
+if IS_RENDER:
     MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 ROOT_URLCONF = "config.urls"
@@ -153,7 +162,7 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": (
             "django.contrib.staticfiles.storage.StaticFilesStorage"
-            if DEBUG
+            if not IS_RENDER
             else "whitenoise.storage.CompressedManifestStaticFilesStorage"
         ),
     },
