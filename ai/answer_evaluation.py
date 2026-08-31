@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 import json
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from django.conf import settings
@@ -80,12 +81,14 @@ EVALUATION_SCHEMA = {
                 "properties": {
                     "title": {"type": "string"},
                     "resource_type": {"type": "string"},
+                    "url": {"type": "string", "minLength": 12, "maxLength": 2048},
                     "recommendation": {"type": "string"},
                     "practice_goal": {"type": "string"},
                 },
                 "required": [
                     "title",
                     "resource_type",
+                    "url",
                     "recommendation",
                     "practice_goal",
                 ],
@@ -179,6 +182,7 @@ def _validate_evaluation(result: dict) -> dict:
         "practice_resources": {
             "title",
             "resource_type",
+            "url",
             "recommendation",
             "practice_goal",
         },
@@ -200,6 +204,20 @@ def _validate_evaluation(result: dict) -> dict:
             raise EvaluationError(
                 "OpenAI returned an incomplete evaluation. Please submit again."
             )
+    for resource in result["practice_resources"]:
+        resource_url = resource["url"].strip()
+        parsed_url = urlparse(resource_url)
+        if (
+            parsed_url.scheme != "https"
+            or not parsed_url.netloc
+            or parsed_url.username
+            or parsed_url.password
+            or any(character.isspace() for character in resource_url)
+        ):
+            raise EvaluationError(
+                "OpenAI returned an invalid practice resource. Please submit again."
+            )
+        resource["url"] = resource_url
     return result
 
 
@@ -239,8 +257,10 @@ def evaluate_assessment_answers(
             "specific, evidence-based feedback without reproducing the reference answer "
             "verbatim. Score each question from 0 to 20 and the overall assessment from 0 "
             "to 100. Identify concrete strengths and weaknesses. Recommend targeted, "
-            "reputable documentation topics, tutorials, or coding exercises; do not invent "
-            "URLs. Make every recommendation directly address a demonstrated weakness."
+            "reputable documentation, tutorials, or coding exercises. For every practice "
+            "resource, provide its direct canonical HTTPS URL and prefer official, "
+            "primary-source documentation. Do not fabricate URLs. Make every recommendation "
+            "directly address a demonstrated weakness."
         ),
         "input": json.dumps(
             {

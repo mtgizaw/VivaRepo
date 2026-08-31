@@ -1279,6 +1279,24 @@ h1 {
     font-size: 1rem;
 }
 
+.practice-card h3 a {
+    color: #2449c4;
+    text-decoration-color: rgba(36, 73, 196, 0.35);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+}
+
+.practice-card h3 a:hover {
+    color: #17389e;
+    text-decoration-color: currentColor;
+}
+
+.practice-card h3 a:focus-visible {
+    border-radius: 0.2rem;
+    outline: 3px solid rgba(49, 85, 217, 0.25);
+    outline-offset: 3px;
+}
+
 .practice-card p {
     margin: 0;
     color: #5e6d86;

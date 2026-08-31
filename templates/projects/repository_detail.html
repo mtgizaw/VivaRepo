@@ -86,7 +86,15 @@
                     {% for resource in submission.practice_resources %}
                         <article class="practice-card">
                             <span>{{ resource.resource_type }}</span>
-                            <h3>{{ resource.title }}</h3>
+                            <h3>
+                                {% if resource.url %}
+                                    <a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ resource.title }} (opens in a new tab)">
+                                        {{ resource.title }} <span aria-hidden="true">↗</span>
+                                    </a>
+                                {% else %}
+                                    {{ resource.title }}
+                                {% endif %}
+                            </h3>
                             <p>{{ resource.recommendation }}</p>
                             <p class="practice-goal"><strong>Practice goal:</strong> {{ resource.practice_goal }}</p>
                         </article>

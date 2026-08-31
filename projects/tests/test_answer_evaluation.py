@@ -58,18 +58,21 @@ def evaluation_result() -> dict:
             {
                 "title": "Python data model documentation",
                 "resource_type": "Documentation",
+                "url": "https://docs.python.org/3/reference/datamodel.html",
                 "recommendation": "Review container protocols and exception behavior.",
                 "practice_goal": "Implement and test a small bounded collection.",
             },
             {
                 "title": "Boundary-value test exercise",
                 "resource_type": "Coding exercise",
+                "url": "https://docs.pytest.org/en/stable/how-to/parametrize.html",
                 "recommendation": "Write tests around empty, one-item, and full states.",
                 "practice_goal": "Cover every transition at the capacity boundary.",
             },
             {
                 "title": "Complexity walkthrough",
                 "resource_type": "Tutorial topic",
+                "url": "https://wiki.python.org/moin/TimeComplexity",
                 "recommendation": "Practice deriving operation costs from source code.",
                 "practice_goal": "State time and space complexity for each operation.",
             },
@@ -140,6 +143,11 @@ class AssessmentAnswerViewTests(TestCase):
         self.assertContains(response, "Strengths")
         self.assertContains(response, "Areas to strengthen")
         self.assertContains(response, "Targeted practice")
+        self.assertContains(
+            response,
+            'href="https://docs.python.org/3/reference/datamodel.html"',
+        )
+        self.assertContains(response, "opens in a new tab")
         self.assertContains(response, "My detailed answer to question 1")
         self.assertNotContains(response, "The repository demonstrates behavior")
 
@@ -281,6 +289,17 @@ class OpenAIAnswerEvaluationServiceTests(TestCase):
             schema["properties"]["question_feedback"]["minItems"],
             5,
         )
+        practice_schema = schema["properties"]["practice_resources"]["items"]
+        self.assertIn("url", practice_schema["required"])
+        self.assertEqual(practice_schema["properties"]["url"]["maxLength"], 2048)
         self.assertIn("A substantive learner response for question 1", payload["input"])
         self.assertEqual(generated.result["overall_score"], 82)
 
+    def test_unsafe_practice_resource_url_is_rejected(self):
+        from ai.answer_evaluation import _validate_evaluation
+
+        result = evaluation_result()
+        result["practice_resources"][0]["url"] = "javascript:alert(1)"
+
+        with self.assertRaises(EvaluationError):
+            _validate_evaluation(result)
