@@ -36,6 +36,37 @@
         </article>
     </div>
 
+    <section class="topic-breakdown" aria-labelledby="topic-breakdown-title">
+        <div class="topic-breakdown-heading">
+            <div>
+                <p class="eyebrow">Assessment coverage</p>
+                <h2 id="topic-breakdown-title">Question topics tested</h2>
+            </div>
+            <span>{{ topic_tallies|length }} topic{{ topic_tallies|length|pluralize }}</span>
+        </div>
+        {% if topic_tallies %}
+            <table class="topic-table">
+                <caption class="visually-hidden">Generated question count by topic</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Topic</th>
+                        <th scope="col">Questions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for topic in topic_tallies %}
+                        <tr>
+                            <td>{{ topic.focus_area }}</td>
+                            <td><span class="topic-tally">{{ topic.question_count }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="topic-empty">Question topics will appear after the first assessment is generated.</p>
+        {% endif %}
+    </section>
+
     <p class="dashboard-note">
         These are aggregate platform totals. No personal account information is displayed.
     </p>

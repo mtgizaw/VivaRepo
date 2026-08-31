@@ -7,6 +7,7 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Count
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -92,10 +93,16 @@ def about(request: HttpRequest) -> HttpResponse:
 
 
 def account_dashboard(request: HttpRequest) -> HttpResponse:
-    """Show aggregate VivaRepo account, repository, and question totals."""
+    """Show aggregate VivaRepo account, repository, and question metrics."""
     account_count = User.objects.count()
     repository_count = Repository.objects.count()
     question_count = FreeResponseQuestion.objects.count()
+    topic_tallies = list(
+        FreeResponseQuestion.objects.exclude(focus_area="")
+        .values("focus_area")
+        .annotate(question_count=Count("id"))
+        .order_by("-question_count", "focus_area")
+    )
     return render(
         request,
         "projects/dashboard.html",
@@ -103,6 +110,7 @@ def account_dashboard(request: HttpRequest) -> HttpResponse:
             "account_count": account_count,
             "repository_count": repository_count,
             "question_count": question_count,
+            "topic_tallies": topic_tallies,
             "account_count_chart": build_account_count_chart(account_count),
         },
     )

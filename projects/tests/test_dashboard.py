@@ -41,7 +41,7 @@ class AccountDashboardTests(TestCase):
                     question_set=question_set,
                     position=position,
                     prompt=f"Question {position}",
-                    focus_area="Stacks",
+                    focus_area="Stacks" if position <= 3 else "Complexity",
                     reference_answer="Reference answer",
                     source_files=["BoundedStack.java"],
                 )
@@ -55,9 +55,21 @@ class AccountDashboardTests(TestCase):
         self.assertEqual(response.context["account_count"], 2)
         self.assertEqual(response.context["repository_count"], 1)
         self.assertEqual(response.context["question_count"], 5)
+        self.assertEqual(
+            response.context["topic_tallies"],
+            [
+                {"focus_area": "Stacks", "question_count": 3},
+                {"focus_area": "Complexity", "question_count": 2},
+            ],
+        )
         self.assertContains(response, "Registered accounts")
         self.assertContains(response, "Repositories uploaded")
         self.assertContains(response, "Questions generated")
+        self.assertContains(response, "Question topics tested")
+        self.assertContains(response, "Stacks")
+        self.assertContains(response, "Complexity")
+        self.assertContains(response, '<span class="topic-tally">3</span>', html=True)
+        self.assertContains(response, '<span class="topic-tally">2</span>', html=True)
         self.assertContains(response, 'id="account-count-chart"')
         self.assertContains(response, "No personal account")
         self.assertContains(response, "information is displayed.")
@@ -69,3 +81,5 @@ class AccountDashboardTests(TestCase):
         self.assertEqual(response.context["account_count"], 0)
         self.assertEqual(response.context["repository_count"], 0)
         self.assertEqual(response.context["question_count"], 0)
+        self.assertEqual(response.context["topic_tallies"], [])
+        self.assertContains(response, "Question topics will appear")
