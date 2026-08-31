@@ -10,12 +10,6 @@
         <p>Upload a ZIP of your repository to begin turning its code into a guided learning experience.</p>
     </header>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="notice notice-success" role="status">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-
     <div class="upload-layout">
         <article class="upload-card">
             <form class="upload-form" method="post" enctype="multipart/form-data">

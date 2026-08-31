@@ -2,7 +2,10 @@
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.test import TestCase
+from django.contrib.messages import SUCCESS
+from django.contrib.messages.storage.base import Message
+from django.contrib.messages.storage.cookie import MessageEncoder
+from django.test import TestCase, override_settings
 from django.urls import resolve, reverse
 
 
@@ -19,6 +22,22 @@ class FoundationSmokeTests(TestCase):
         response = self.client.get(reverse("projects:health"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
+
+    @override_settings(
+        MESSAGE_STORAGE="django.contrib.messages.storage.session.SessionStorage"
+    )
+    def test_flash_message_is_displayed_once_on_any_page(self):
+        session = self.client.session
+        session["_messages"] = MessageEncoder().encode(
+            [Message(SUCCESS, "Successfully signed in as martha.")]
+        )
+        session.save()
+
+        first_response = self.client.get(reverse("projects:home"))
+        second_response = self.client.get(reverse("projects:home"))
+
+        self.assertContains(first_response, "Successfully signed in as martha.")
+        self.assertNotContains(second_response, "Successfully signed in as martha.")
 
 
 class AuthenticationTests(TestCase):

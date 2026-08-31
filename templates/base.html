@@ -30,6 +30,13 @@
     </header>
 
     <main>
+        {% if messages %}
+            <div class="site-messages" aria-label="Notifications">
+                {% for message in messages %}
+                    <div class="notice notice-{{ message.tags|default:'info' }}" role="status">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 </body>
