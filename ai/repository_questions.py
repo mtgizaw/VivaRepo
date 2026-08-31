@@ -16,6 +16,12 @@ OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 MAX_CONTEXT_CHARACTERS = 100_000
 MAX_FILE_CHARACTERS = 20_000
 MAX_CONTEXT_FILES = 80
+QUESTION_TOPICS = (
+    "Data Representation & State Flow",
+    "Contracts & Invariants",
+    "API Behavior, Edge Cases & Failures",
+    "Testing & Quality",
+)
 
 TEXT_EXTENSIONS = {
     ".c",
@@ -76,7 +82,14 @@ QUESTION_SCHEMA = {
                 "type": "object",
                 "properties": {
                     "prompt": {"type": "string", "minLength": 20},
-                    "focus_area": {"type": "string", "minLength": 2},
+                    "focus_area": {
+                        "type": "string",
+                        "enum": list(QUESTION_TOPICS),
+                        "description": (
+                            "The one approved category that best represents the "
+                            "question's primary learning objective."
+                        ),
+                    },
                     "reference_answer": {"type": "string", "minLength": 20},
                     "source_files": {
                         "type": "array",
@@ -211,6 +224,10 @@ def _parse_questions(payload: dict) -> list[dict]:
             raise QuestionGenerationError(
                 "OpenAI returned an unexpected result. Please try generating again."
             )
+        if question["focus_area"] not in QUESTION_TOPICS:
+            raise QuestionGenerationError(
+                "OpenAI returned an unexpected result. Please try generating again."
+            )
         if not isinstance(question["source_files"], list) or not all(
             isinstance(source_file, str) and source_file.strip()
             for source_file in question["source_files"]
@@ -279,7 +296,16 @@ def generate_questions_for_repository(repository, user) -> GeneratedQuestionSet:
             "learner to explain behavior, design decisions, data flow, edge cases, or "
             "testing demonstrated by this specific repository. Ground every question "
             "and reference answer in the supplied files. Do not ask trivia, multiple-"
-            "choice questions, or questions that require knowledge absent from the code."
+            "choice questions, or questions that require knowledge absent from the code. "
+            "Assign each question exactly one approved focus-area label based on its "
+            "primary learning objective: Data Representation & State Flow covers data "
+            "structures, internal representation, state transitions, and data flow; "
+            "Contracts & Invariants covers validation, preconditions, invariants, and "
+            "correctness guarantees; API Behavior, Edge Cases & Failures covers public "
+            "API semantics, boundaries, empty states, exceptions, and failure behavior; "
+            "Testing & Quality covers test design, coverage, gaps, and verification. "
+            "Do not invent or combine labels, and do not force an even distribution when "
+            "the repository evidence supports concentrating on particular categories."
         ),
         "input": (
             f"Repository name: {repository.name}\n"

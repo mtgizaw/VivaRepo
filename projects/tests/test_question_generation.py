@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from ai.repository_questions import GeneratedQuestionSet
+from ai.repository_questions import GeneratedQuestionSet, QUESTION_TOPICS
 from assessments.models import QuestionSet
 from projects.models import Repository
 from projects.tests.test_repository_upload import repository_zip
@@ -23,7 +23,7 @@ def five_questions() -> list[dict]:
     return [
         {
             "prompt": f"Explain how repository behavior number {number} works and why.",
-            "focus_area": f"Behavior {number}",
+            "focus_area": QUESTION_TOPICS[(number - 1) % len(QUESTION_TOPICS)],
             "reference_answer": (
                 f"The repository demonstrates behavior {number} through its source code."
             ),
@@ -276,6 +276,11 @@ class OpenAIQuestionServiceTests(TestCase):
         self.assertTrue(payload["text"]["format"]["strict"])
         self.assertEqual(schema["properties"]["questions"]["minItems"], 5)
         self.assertEqual(schema["properties"]["questions"]["maxItems"], 5)
+        focus_area_schema = schema["properties"]["questions"]["items"][
+            "properties"
+        ]["focus_area"]
+        self.assertEqual(focus_area_schema["enum"], list(QUESTION_TOPICS))
+        self.assertIn("Do not invent or combine labels", payload["instructions"])
         self.assertIn("project/app.py", payload["input"])
         self.assertEqual(len(result.questions), 5)
 
