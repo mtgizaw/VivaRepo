@@ -31,6 +31,11 @@ urlpatterns = [
         views.replace_repository_archive,
         name="replace_repository_archive",
     ),
+    path(
+        "repositories/<int:repository_id>/submit-answers/",
+        views.submit_assessment_answers,
+        name="submit_assessment_answers",
+    ),
     path("signup/", views.signup, name="signup"),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),

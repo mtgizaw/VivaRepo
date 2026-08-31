@@ -148,3 +148,36 @@ class RepositoryArchiveReplacementForm(forms.Form):
         archive = self.cleaned_data["archive"]
         self.repository_context = validate_repository_archive(archive)
         return archive
+
+
+class AssessmentAnswerForm(forms.Form):
+    """Require one substantive free-response answer for every question."""
+
+    def __init__(self, questions, *args, initial_answers=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.questions = list(questions)
+        initial_answers = initial_answers or {}
+        for question in self.questions:
+            self.fields[f"question_{question.pk}"] = forms.CharField(
+                min_length=10,
+                max_length=5_000,
+                label=f"Answer to question {question.position}",
+                initial=initial_answers.get(question.pk, ""),
+                error_messages={
+                    "required": "Answer this question before submitting.",
+                    "min_length": "Add a little more detail before submitting.",
+                },
+                widget=forms.Textarea(
+                    attrs={
+                        "rows": 6,
+                        "placeholder": "Explain your answer and reasoning…",
+                    }
+                ),
+            )
+
+    def answers_by_question_id(self) -> dict[int, str]:
+        """Return validated answers keyed by their question IDs."""
+        return {
+            question.pk: self.cleaned_data[f"question_{question.pk}"].strip()
+            for question in self.questions
+        }

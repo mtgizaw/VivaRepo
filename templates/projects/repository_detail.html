@@ -18,28 +18,125 @@
     </header>
 
     {% if question_set.status == "complete" %}
-        <div class="question-intro">
-            <h2>Free-response questions</h2>
-            <p>Explain your reasoning in your own words. Each question is grounded in this repository.</p>
-        </div>
-        <ol class="question-list">
-            {% for question in questions %}
-                <li class="question-card">
-                    <div class="question-meta">
-                        <span>Question {{ question.position }}</span>
-                        <span>{{ question.focus_area }}</span>
+        {% if submission.status == "complete" %}
+            <section class="evaluation-summary" aria-labelledby="evaluation-title">
+                <div class="score-card">
+                    <p class="score-value">{{ submission.overall_score }}<span>/100</span></p>
+                    <p>Overall score</p>
+                </div>
+                <div>
+                    <p class="eyebrow">Assessment complete</p>
+                    <h2 id="evaluation-title">Your evaluation</h2>
+                    <p>{{ submission.overall_summary }}</p>
+                </div>
+            </section>
+
+            <div class="evaluation-columns">
+                <section class="evaluation-panel evaluation-strengths" aria-labelledby="strengths-title">
+                    <h2 id="strengths-title">Strengths</h2>
+                    <ul>
+                        {% for strength in submission.strengths %}
+                            <li><strong>{{ strength.title }}</strong><span>{{ strength.detail }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </section>
+                <section class="evaluation-panel evaluation-weaknesses" aria-labelledby="weaknesses-title">
+                    <h2 id="weaknesses-title">Areas to strengthen</h2>
+                    <ul>
+                        {% for weakness in submission.weaknesses %}
+                            <li><strong>{{ weakness.title }}</strong><span>{{ weakness.detail }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            </div>
+
+            <section class="question-feedback-section" aria-labelledby="question-feedback-title">
+                <div class="question-intro">
+                    <h2 id="question-feedback-title">Question-by-question feedback</h2>
+                    <p>Review what you demonstrated and the clearest next improvement for each answer.</p>
+                </div>
+                <ol class="question-list">
+                    {% for item in evaluation_items %}
+                        <li class="question-card feedback-card">
+                            <div class="question-meta">
+                                <span>Question {{ item.question.position }}</span>
+                                <span>{{ item.feedback.score }}/20</span>
+                            </div>
+                            <h2>{{ item.question.prompt }}</h2>
+                            <div class="learner-answer">
+                                <h3>Your answer</h3>
+                                <p>{{ item.answer.response }}</p>
+                            </div>
+                            <p class="feedback-summary">{{ item.feedback.summary }}</p>
+                            <div class="feedback-points">
+                                <p><strong>What worked</strong>{{ item.feedback.demonstrated_strength }}</p>
+                                <p><strong>Next improvement</strong>{{ item.feedback.next_improvement }}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ol>
+            </section>
+
+            <section class="practice-section" aria-labelledby="practice-title">
+                <div class="question-intro">
+                    <h2 id="practice-title">Targeted practice</h2>
+                    <p>Use these recommendations to focus your next study session.</p>
+                </div>
+                <div class="practice-grid">
+                    {% for resource in submission.practice_resources %}
+                        <article class="practice-card">
+                            <span>{{ resource.resource_type }}</span>
+                            <h3>{{ resource.title }}</h3>
+                            <p>{{ resource.recommendation }}</p>
+                            <p class="practice-goal"><strong>Practice goal:</strong> {{ resource.practice_goal }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+            <p class="generation-note">Evaluated with {{ submission.model_name }} on {{ submission.completed_at|date:"M j, Y" }}.</p>
+        {% else %}
+            <div class="question-intro">
+                <h2>Free-response questions</h2>
+                <p>Answer all five questions in your own words, then submit them together for a detailed evaluation.</p>
+            </div>
+            {% if submission.status == "failed" %}
+                <div class="evaluation-error" role="alert">
+                    <strong>Evaluation needs another try.</strong>
+                    <span>{{ submission.error_message }} Your answers are saved below.</span>
+                </div>
+            {% endif %}
+            <form class="answer-form" method="post" action="{% url 'projects:submit_assessment_answers' repository.pk %}" data-evaluation-form>
+                {% csrf_token %}
+                <ol class="question-list">
+                    {% for question, answer_field in answer_fields %}
+                        <li class="question-card answer-card">
+                            <div class="question-meta">
+                                <span>Question {{ question.position }}</span>
+                                <span>{{ question.focus_area }}</span>
+                            </div>
+                            <h2>{{ question.prompt }}</h2>
+                            <label for="{{ answer_field.id_for_label }}">Your answer</label>
+                            {{ answer_field }}
+                            {% if answer_field.errors %}<div class="answer-errors" role="alert">{{ answer_field.errors }}</div>{% endif %}
+                            <details>
+                                <summary>Source files</summary>
+                                <ul>
+                                    {% for source_file in question.source_files %}<li><code>{{ source_file }}</code></li>{% endfor %}
+                                </ul>
+                            </details>
+                        </li>
+                    {% endfor %}
+                </ol>
+                <div class="answer-submit-bar">
+                    <div>
+                        <strong>Ready for feedback?</strong>
+                        <span>All five answers are required.</span>
                     </div>
-                    <h2>{{ question.prompt }}</h2>
-                    <details>
-                        <summary>Source files</summary>
-                        <ul>
-                            {% for source_file in question.source_files %}<li><code>{{ source_file }}</code></li>{% endfor %}
-                        </ul>
-                    </details>
-                </li>
-            {% endfor %}
-        </ol>
-        <p class="generation-note">Generated with {{ question_set.model_name }} on {{ question_set.completed_at|date:"M j, Y" }}.</p>
+                    <button class="button button-primary evaluation-submit" type="submit">Submit all answers</button>
+                </div>
+            </form>
+            <p class="generation-note">Questions generated with {{ question_set.model_name }} on {{ question_set.completed_at|date:"M j, Y" }}.</p>
+        {% endif %}
     {% elif question_set.status == "generating" %}
         <div class="assessment-empty">
             <div class="loading-mark" aria-hidden="true"></div>
@@ -78,6 +175,13 @@
             const button = form.querySelector("button");
             button.disabled = true;
             button.textContent = "Generating questions…";
+        });
+    });
+    document.querySelectorAll("[data-evaluation-form]").forEach((form) => {
+        form.addEventListener("submit", () => {
+            const button = form.querySelector("button[type='submit']");
+            button.disabled = true;
+            button.textContent = "Evaluating answers…";
         });
     });
 </script>

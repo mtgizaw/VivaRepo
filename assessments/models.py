@@ -64,3 +64,70 @@ class FreeResponseQuestion(models.Model):
 
     def __str__(self) -> str:
         return f"Question {self.position}: {self.focus_area}"
+
+
+class AssessmentSubmission(models.Model):
+    """A user's complete set of answers and its generated evaluation."""
+
+    class Status(models.TextChoices):
+        EVALUATING = "evaluating", "Evaluating"
+        COMPLETE = "complete", "Complete"
+        FAILED = "failed", "Failed"
+
+    question_set = models.OneToOneField(
+        QuestionSet,
+        on_delete=models.CASCADE,
+        related_name="submission",
+    )
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="assessment_submissions",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.EVALUATING,
+    )
+    overall_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    overall_summary = models.TextField(blank=True)
+    strengths = models.JSONField(default=list)
+    weaknesses = models.JSONField(default=list)
+    question_feedback = models.JSONField(default=list)
+    practice_resources = models.JSONField(default=list)
+    model_name = models.CharField(max_length=80)
+    response_id = models.CharField(max_length=120, blank=True)
+    error_message = models.CharField(max_length=255, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"Submission for {self.question_set.repository.name}"
+
+
+class SubmittedAnswer(models.Model):
+    """A learner's answer to one generated free-response question."""
+
+    submission = models.ForeignKey(
+        AssessmentSubmission,
+        on_delete=models.CASCADE,
+        related_name="answers",
+    )
+    question = models.ForeignKey(
+        FreeResponseQuestion,
+        on_delete=models.CASCADE,
+        related_name="submitted_answers",
+    )
+    response = models.TextField()
+
+    class Meta:
+        ordering = ("question__position",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("submission", "question"),
+                name="unique_answer_per_submission_question",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"Answer to question {self.question.position}"

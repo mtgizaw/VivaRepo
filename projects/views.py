@@ -19,9 +19,16 @@ from ai.repository_questions import (
     QuestionGenerationError,
     generate_questions_for_repository,
 )
-from assessments.models import FreeResponseQuestion, QuestionSet
+from ai.answer_evaluation import EvaluationError, evaluate_assessment_answers
+from assessments.models import (
+    AssessmentSubmission,
+    FreeResponseQuestion,
+    QuestionSet,
+    SubmittedAnswer,
+)
 
 from .forms import (
+    AssessmentAnswerForm,
     EmailLoginForm,
     RepositoryArchiveReplacementForm,
     RepositoryUploadForm,
@@ -190,11 +197,46 @@ def repository_detail(request: HttpRequest, repository_id: int) -> HttpResponse:
         uploaded_by=request.user,
     )
     question_set = getattr(repository, "question_set", None)
-    questions = (
+    questions = list(
         question_set.questions.all()
         if question_set and question_set.status == QuestionSet.Status.COMPLETE
         else []
     )
+    submission = getattr(question_set, "submission", None) if question_set else None
+    submitted_answers = {
+        answer.question_id: answer
+        for answer in submission.answers.select_related("question").all()
+    } if submission else {}
+    answer_form = None
+    answer_fields = []
+    evaluation_items = []
+    if questions and not (
+        submission and submission.status == AssessmentSubmission.Status.COMPLETE
+    ):
+        answer_form = AssessmentAnswerForm(
+            questions,
+            initial_answers={
+                question_id: answer.response
+                for question_id, answer in submitted_answers.items()
+            },
+        )
+        answer_fields = [
+            (question, answer_form[f"question_{question.pk}"])
+            for question in questions
+        ]
+    elif submission and submission.status == AssessmentSubmission.Status.COMPLETE:
+        feedback_by_position = {
+            item["question_number"]: item
+            for item in submission.question_feedback
+        }
+        evaluation_items = [
+            {
+                "question": question,
+                "answer": submitted_answers.get(question.pk),
+                "feedback": feedback_by_position.get(question.position),
+            }
+            for question in questions
+        ]
     zip_read_failed = bool(
         question_set
         and question_set.status == QuestionSet.Status.FAILED
@@ -209,9 +251,136 @@ def repository_detail(request: HttpRequest, repository_id: int) -> HttpResponse:
             "repository": repository,
             "question_set": question_set,
             "questions": questions,
+            "submission": submission,
+            "answer_form": answer_form,
+            "answer_fields": answer_fields,
+            "evaluation_items": evaluation_items,
             "zip_read_failed": zip_read_failed,
         },
     )
+
+
+@login_required
+@require_POST
+def submit_assessment_answers(
+    request: HttpRequest,
+    repository_id: int,
+) -> HttpResponse:
+    """Persist all five learner answers and generate a detailed evaluation."""
+    repository = get_object_or_404(
+        Repository,
+        pk=repository_id,
+        uploaded_by=request.user,
+    )
+    question_set = get_object_or_404(
+        QuestionSet,
+        repository=repository,
+        status=QuestionSet.Status.COMPLETE,
+    )
+    questions = list(question_set.questions.all())
+    if len(questions) != 5:
+        messages.error(request, "This assessment does not contain five questions yet.")
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+
+    existing_submission = getattr(question_set, "submission", None)
+    if (
+        existing_submission
+        and existing_submission.status == AssessmentSubmission.Status.COMPLETE
+    ):
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+    if (
+        existing_submission
+        and existing_submission.status == AssessmentSubmission.Status.EVALUATING
+    ):
+        messages.info(request, "Your answers are already being evaluated.")
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+
+    form = AssessmentAnswerForm(questions, request.POST)
+    if not form.is_valid():
+        submission = existing_submission
+        submitted_answers = {
+            answer.question_id: answer
+            for answer in submission.answers.all()
+        } if submission else {}
+        return render(
+            request,
+            "projects/repository_detail.html",
+            {
+                "repository": repository,
+                "question_set": question_set,
+                "questions": questions,
+                "submission": submission,
+                "answer_form": form,
+                "answer_fields": [
+                    (question, form[f"question_{question.pk}"])
+                    for question in questions
+                ],
+                "evaluation_items": [],
+                "zip_read_failed": False,
+                "submitted_answers": submitted_answers,
+            },
+        )
+
+    answers = form.answers_by_question_id()
+    submission, _ = AssessmentSubmission.objects.update_or_create(
+        question_set=question_set,
+        defaults={
+            "submitted_by": request.user,
+            "status": AssessmentSubmission.Status.EVALUATING,
+            "model_name": settings.OPENAI_EVALUATION_MODEL,
+            "error_message": "",
+        },
+    )
+    with transaction.atomic():
+        for question in questions:
+            SubmittedAnswer.objects.update_or_create(
+                submission=submission,
+                question=question,
+                defaults={"response": answers[question.pk]},
+            )
+
+    try:
+        generated = evaluate_assessment_answers(
+            repository,
+            question_set,
+            answers,
+            request.user,
+        )
+    except EvaluationError as exc:
+        submission.status = AssessmentSubmission.Status.FAILED
+        submission.error_message = str(exc)
+        submission.save(update_fields=("status", "error_message"))
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+
+    result = generated.result
+    submission.status = AssessmentSubmission.Status.COMPLETE
+    submission.overall_score = result["overall_score"]
+    submission.overall_summary = result["overall_summary"]
+    submission.strengths = result["strengths"]
+    submission.weaknesses = result["weaknesses"]
+    submission.question_feedback = result["question_feedback"]
+    submission.practice_resources = result["practice_resources"]
+    submission.model_name = generated.model_name
+    submission.response_id = generated.response_id
+    submission.error_message = ""
+    submission.completed_at = timezone.now()
+    submission.save(
+        update_fields=(
+            "status",
+            "overall_score",
+            "overall_summary",
+            "strengths",
+            "weaknesses",
+            "question_feedback",
+            "practice_resources",
+            "model_name",
+            "response_id",
+            "error_message",
+            "completed_at",
+        )
+    )
+    messages.success(request, "Your detailed evaluation is ready.")
+    return redirect("projects:repository_detail", repository_id=repository.pk)
 
 
 @login_required

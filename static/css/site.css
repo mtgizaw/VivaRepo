@@ -943,6 +943,318 @@ h1 {
     overflow-wrap: anywhere;
 }
 
+.answer-form {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.answer-card label {
+    display: block;
+    margin-bottom: 0.55rem;
+    color: #24324b;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+.answer-card textarea {
+    width: 100%;
+    min-height: 9rem;
+    padding: 0.9rem 1rem;
+    resize: vertical;
+    border: 1px solid #cbd5e7;
+    border-radius: 0.8rem;
+    outline: none;
+    color: #17233c;
+    background: #fbfcff;
+    font: inherit;
+    line-height: 1.6;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.answer-card textarea:focus {
+    border-color: #4564df;
+    box-shadow: 0 0 0 4px rgba(49, 85, 217, 0.12);
+}
+
+.answer-card details {
+    margin-top: 0.85rem;
+}
+
+.answer-errors,
+.answer-errors ul {
+    margin: 0.55rem 0 0;
+    padding: 0;
+    color: #a13737;
+    font-size: 0.82rem;
+    font-weight: 700;
+    list-style: none;
+}
+
+.answer-submit-bar {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #cbd6f4;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 16px 38px rgba(31, 49, 86, 0.16);
+    backdrop-filter: blur(12px);
+}
+
+.answer-submit-bar div {
+    display: grid;
+    gap: 0.2rem;
+    color: #17233c;
+}
+
+.answer-submit-bar span {
+    color: #71809a;
+    font-size: 0.8rem;
+}
+
+.evaluation-submit {
+    flex: 0 0 auto;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.evaluation-submit:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.evaluation-error {
+    display: grid;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid #efc9c9;
+    border-radius: 0.85rem;
+    color: #812f2f;
+    background: #fff7f7;
+    line-height: 1.5;
+}
+
+.evaluation-error span {
+    font-size: 0.88rem;
+}
+
+.evaluation-summary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(1.25rem, 4vw, 2.25rem);
+    margin-bottom: 1rem;
+    padding: clamp(1.25rem, 4vw, 2rem);
+    border: 1px solid #cbd7f5;
+    border-radius: 1.2rem;
+    background: linear-gradient(135deg, #edf2ff, #ffffff 72%);
+    box-shadow: 0 18px 42px rgba(31, 49, 86, 0.08);
+}
+
+.evaluation-summary h2,
+.evaluation-summary p {
+    margin: 0;
+}
+
+.evaluation-summary h2 {
+    color: #101a32;
+    font-size: clamp(1.45rem, 4vw, 2rem);
+}
+
+.evaluation-summary > div:last-child > p:last-child {
+    margin-top: 0.55rem;
+    color: #52627e;
+    line-height: 1.65;
+}
+
+.score-card {
+    min-width: 8rem;
+    padding: 1.1rem;
+    border-radius: 1rem;
+    color: white;
+    background: #3155d9;
+    text-align: center;
+}
+
+.score-card .score-value {
+    color: white;
+    font-size: 2.35rem;
+    font-weight: 850;
+    letter-spacing: -0.05em;
+}
+
+.score-value span {
+    margin-left: 0.15rem;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    opacity: 0.8;
+}
+
+.score-card > p:last-child {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 750;
+    opacity: 0.86;
+}
+
+.evaluation-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.25rem;
+}
+
+.evaluation-panel {
+    padding: 1.35rem;
+    border: 1px solid #dce3ef;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.evaluation-panel h2 {
+    margin: 0;
+    color: #17233c;
+    font-size: 1.1rem;
+}
+
+.evaluation-panel ul {
+    display: grid;
+    gap: 0.9rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.evaluation-panel li {
+    display: grid;
+    gap: 0.2rem;
+    padding-left: 0.85rem;
+    border-left: 3px solid #49a273;
+    color: #55657f;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.evaluation-weaknesses li {
+    border-left-color: #e5a33f;
+}
+
+.evaluation-panel strong {
+    color: #26344f;
+}
+
+.evaluation-panel span {
+    display: block;
+}
+
+.question-feedback-section,
+.practice-section {
+    margin-top: 2.25rem;
+}
+
+.learner-answer {
+    margin: 1rem 0;
+    padding: 0.9rem 1rem;
+    border-left: 3px solid #9aabe6;
+    border-radius: 0 0.7rem 0.7rem 0;
+    background: #f5f7fd;
+}
+
+.learner-answer h3,
+.learner-answer p {
+    margin: 0;
+}
+
+.learner-answer h3 {
+    margin-bottom: 0.35rem;
+    color: #52627e;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.learner-answer p {
+    color: #34425c;
+    line-height: 1.65;
+    white-space: pre-wrap;
+}
+
+.feedback-summary {
+    color: #40516f;
+    line-height: 1.6;
+}
+
+.feedback-points {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.feedback-points p {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0.85rem;
+    border-radius: 0.75rem;
+    color: #52627e;
+    background: #f7f9fd;
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+.feedback-points strong {
+    color: #26344f;
+}
+
+.practice-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.practice-card {
+    padding: 1.2rem;
+    border: 1px solid #dce3ef;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 14px 32px rgba(31, 49, 86, 0.06);
+}
+
+.practice-card > span {
+    color: #3155d9;
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.practice-card h3 {
+    margin: 0.5rem 0 0.6rem;
+    color: #17233c;
+    font-size: 1rem;
+}
+
+.practice-card p {
+    margin: 0;
+    color: #5e6d86;
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+.practice-card .practice-goal {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid #e3e8f1;
+}
+
 .generation-note {
     margin: 1.25rem 0 0;
     color: #71809a;
@@ -1083,6 +1395,27 @@ h1 {
     .assessment-heading {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .evaluation-summary,
+    .evaluation-columns,
+    .feedback-points,
+    .practice-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .score-card {
+        min-width: 0;
+    }
+
+    .answer-submit-bar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .evaluation-submit {
+        width: 100%;
+        text-align: center;
     }
 }
 
