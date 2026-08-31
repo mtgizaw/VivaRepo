@@ -45,6 +45,17 @@
                 <p>Timing begins when the first question set is generated.</p>
             {% endif %}
         </article>
+
+        <article class="summary-metric-card" aria-label="Average answer evaluation time: {{ average_evaluation_time }}">
+            <div class="summary-metric-icon summary-metric-icon-time" aria-hidden="true">◷</div>
+            <p class="summary-metric-value summary-metric-value-duration">{{ average_evaluation_time }}</p>
+            <h2>Average evaluation time</h2>
+            {% if evaluation_sample_count %}
+                <p>Measured from evaluation start to feedback across {{ evaluation_sample_count }} completed evaluation{{ evaluation_sample_count|pluralize }}.</p>
+            {% else %}
+                <p>Timing begins when the first set of answers is evaluated.</p>
+            {% endif %}
+        </article>
     </div>
 
     <section class="topic-breakdown" aria-labelledby="topic-breakdown-title">

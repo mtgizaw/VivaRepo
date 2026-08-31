@@ -82,7 +82,7 @@ def build_account_count_chart(account_count: int) -> str:
     )
 
 
-def format_generation_duration(seconds: float) -> str:
+def format_duration(seconds: float) -> str:
     """Return a compact, dashboard-friendly duration."""
     rounded_seconds = round(seconds)
     if rounded_seconds < 1:
@@ -130,6 +130,20 @@ def account_dashboard(request: HttpRequest) -> HttpResponse:
         if generation_durations
         else None
     )
+    evaluation_durations = [
+        (completed_at - started_at).total_seconds()
+        for started_at, completed_at in AssessmentSubmission.objects.filter(
+            status=AssessmentSubmission.Status.COMPLETE,
+            evaluation_started_at__isnull=False,
+            completed_at__isnull=False,
+        ).values_list("evaluation_started_at", "completed_at")
+        if completed_at >= started_at
+    ]
+    average_evaluation_seconds = (
+        sum(evaluation_durations) / len(evaluation_durations)
+        if evaluation_durations
+        else None
+    )
     return render(
         request,
         "projects/dashboard.html",
@@ -140,11 +154,18 @@ def account_dashboard(request: HttpRequest) -> HttpResponse:
             "topic_tallies": topic_tallies,
             "average_generation_seconds": average_generation_seconds,
             "average_generation_time": (
-                format_generation_duration(average_generation_seconds)
+                format_duration(average_generation_seconds)
                 if average_generation_seconds is not None
                 else "—"
             ),
             "generation_sample_count": len(generation_durations),
+            "average_evaluation_seconds": average_evaluation_seconds,
+            "average_evaluation_time": (
+                format_duration(average_evaluation_seconds)
+                if average_evaluation_seconds is not None
+                else "—"
+            ),
+            "evaluation_sample_count": len(evaluation_durations),
             "account_count_chart": build_account_count_chart(account_count),
         },
     )
@@ -392,6 +413,8 @@ def submit_assessment_answers(
             "status": AssessmentSubmission.Status.EVALUATING,
             "model_name": settings.OPENAI_EVALUATION_MODEL,
             "error_message": "",
+            "evaluation_started_at": timezone.now(),
+            "completed_at": None,
         },
     )
     with transaction.atomic():

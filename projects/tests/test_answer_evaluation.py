@@ -116,6 +116,8 @@ class AssessmentAnswerViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content.count(b"<textarea"), 5)
         self.assertContains(response, "Submit all answers")
+        self.assertContains(response, "data-evaluation-label")
+        self.assertContains(response, "Evaluating answers… ${elapsedSeconds}s")
 
     @patch("projects.views.evaluate_assessment_answers")
     def test_all_answers_are_saved_and_detailed_evaluation_is_displayed(
@@ -138,6 +140,12 @@ class AssessmentAnswerViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(submission.status, AssessmentSubmission.Status.COMPLETE)
         self.assertEqual(submission.overall_score, 82)
+        self.assertIsNotNone(submission.evaluation_started_at)
+        self.assertIsNotNone(submission.completed_at)
+        self.assertGreaterEqual(
+            submission.completed_at,
+            submission.evaluation_started_at,
+        )
         self.assertEqual(SubmittedAnswer.objects.filter(submission=submission).count(), 5)
         self.assertContains(response, "Your evaluation")
         self.assertContains(response, "Strengths")

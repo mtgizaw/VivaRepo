@@ -140,7 +140,7 @@
                         <strong>Ready for feedback?</strong>
                         <span>All five answers are required.</span>
                     </div>
-                    <button class="button button-primary evaluation-submit" type="submit">Submit all answers</button>
+                    <button class="button button-primary evaluation-submit" type="submit" data-evaluation-label>Submit all answers</button>
                 </div>
             </form>
             <p class="generation-note">Questions generated with {{ question_set.model_name }} on {{ question_set.completed_at|date:"M j, Y" }}.</p>
@@ -196,8 +196,16 @@
     document.querySelectorAll("[data-evaluation-form]").forEach((form) => {
         form.addEventListener("submit", () => {
             const button = form.querySelector("button[type='submit']");
+            const label = form.querySelector("[data-evaluation-label]");
+            const startedAt = performance.now();
+            const updateElapsedTime = () => {
+                const elapsedSeconds = Math.floor((performance.now() - startedAt) / 1000);
+                label.textContent = `Evaluating answers… ${elapsedSeconds}s`;
+            };
             button.disabled = true;
-            button.textContent = "Evaluating answers…";
+            updateElapsedTime();
+            const timer = window.setInterval(updateElapsedTime, 1000);
+            window.addEventListener("pagehide", () => window.clearInterval(timer), { once: true });
         });
     });
 </script>

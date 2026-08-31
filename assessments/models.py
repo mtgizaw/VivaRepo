@@ -100,6 +100,7 @@ class AssessmentSubmission(models.Model):
     response_id = models.CharField(max_length=120, blank=True)
     error_message = models.CharField(max_length=255, blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
+    evaluation_started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:
