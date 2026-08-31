@@ -495,7 +495,7 @@ h1 {
 
 .dashboard-metrics {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
     margin-top: 1rem;
 }
@@ -529,6 +529,10 @@ h1 {
     font-size: 1rem;
 }
 
+.summary-metric-icon-time {
+    font-size: 1.15rem;
+}
+
 .summary-metric-value {
     margin: 0 3.25rem 0.8rem 0;
     color: #101a32;
@@ -536,6 +540,11 @@ h1 {
     font-weight: 850;
     line-height: 1;
     letter-spacing: -0.05em;
+}
+
+.summary-metric-value-duration {
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    letter-spacing: -0.04em;
 }
 
 .summary-metric-card h2 {

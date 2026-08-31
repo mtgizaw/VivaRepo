@@ -181,8 +181,16 @@
     document.querySelectorAll("[data-generate-form]").forEach((form) => {
         form.addEventListener("submit", () => {
             const button = form.querySelector("button");
+            const label = form.querySelector("[data-generate-label]");
+            const startedAt = performance.now();
+            const updateElapsedTime = () => {
+                const elapsedSeconds = Math.floor((performance.now() - startedAt) / 1000);
+                label.textContent = `Generating questions… ${elapsedSeconds}s`;
+            };
             button.disabled = true;
-            button.textContent = "Generating questions…";
+            updateElapsedTime();
+            const timer = window.setInterval(updateElapsedTime, 1000);
+            window.addEventListener("pagehide", () => window.clearInterval(timer), { once: true });
         });
     });
     document.querySelectorAll("[data-evaluation-form]").forEach((form) => {

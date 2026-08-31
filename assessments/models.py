@@ -33,6 +33,7 @@ class QuestionSet(models.Model):
     response_id = models.CharField(max_length=120, blank=True)
     error_message = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    generation_started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:

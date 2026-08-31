@@ -87,6 +87,12 @@ class RepositoryQuestionViewTests(TestCase):
         question_set = QuestionSet.objects.get(repository=self.repository)
         self.assertEqual(question_set.status, QuestionSet.Status.COMPLETE)
         self.assertEqual(question_set.questions.count(), 5)
+        self.assertIsNotNone(question_set.generation_started_at)
+        self.assertIsNotNone(question_set.completed_at)
+        self.assertGreaterEqual(
+            question_set.completed_at,
+            question_set.generation_started_at,
+        )
         self.assertContains(response, "Five free-response questions are ready.")
         self.assertContains(response, "Question 5")
         self.assertNotContains(response, "The repository demonstrates behavior")

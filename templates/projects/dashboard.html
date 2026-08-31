@@ -34,6 +34,17 @@
             <h2>Questions generated</h2>
             <p>Free-response questions created from uploaded code.</p>
         </article>
+
+        <article class="summary-metric-card" aria-label="Average question generation time: {{ average_generation_time }}">
+            <div class="summary-metric-icon summary-metric-icon-time" aria-hidden="true">◷</div>
+            <p class="summary-metric-value summary-metric-value-duration">{{ average_generation_time }}</p>
+            <h2>Average generation time</h2>
+            {% if generation_sample_count %}
+                <p>Measured from click to completion across {{ generation_sample_count }} completed run{{ generation_sample_count|pluralize }}.</p>
+            {% else %}
+                <p>Timing begins when the first question set is generated.</p>
+            {% endif %}
+        </article>
     </div>
 
     <section class="topic-breakdown" aria-labelledby="topic-breakdown-title">

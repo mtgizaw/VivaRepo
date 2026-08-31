@@ -82,6 +82,19 @@ def build_account_count_chart(account_count: int) -> str:
     )
 
 
+def format_generation_duration(seconds: float) -> str:
+    """Return a compact, dashboard-friendly duration."""
+    rounded_seconds = round(seconds)
+    if rounded_seconds < 1:
+        return "<1 sec"
+    if rounded_seconds < 60:
+        return f"{rounded_seconds} sec"
+    minutes, remaining_seconds = divmod(rounded_seconds, 60)
+    if remaining_seconds:
+        return f"{minutes}m {remaining_seconds}s"
+    return f"{minutes} min"
+
+
 def home(request: HttpRequest) -> HttpResponse:
     """Render the product landing page."""
     return render(request, "projects/home.html")
@@ -103,6 +116,20 @@ def account_dashboard(request: HttpRequest) -> HttpResponse:
         .annotate(question_count=Count("id"))
         .order_by("-question_count", "focus_area")
     )
+    generation_durations = [
+        (completed_at - started_at).total_seconds()
+        for started_at, completed_at in QuestionSet.objects.filter(
+            status=QuestionSet.Status.COMPLETE,
+            generation_started_at__isnull=False,
+            completed_at__isnull=False,
+        ).values_list("generation_started_at", "completed_at")
+        if completed_at >= started_at
+    ]
+    average_generation_seconds = (
+        sum(generation_durations) / len(generation_durations)
+        if generation_durations
+        else None
+    )
     return render(
         request,
         "projects/dashboard.html",
@@ -111,6 +138,13 @@ def account_dashboard(request: HttpRequest) -> HttpResponse:
             "repository_count": repository_count,
             "question_count": question_count,
             "topic_tallies": topic_tallies,
+            "average_generation_seconds": average_generation_seconds,
+            "average_generation_time": (
+                format_generation_duration(average_generation_seconds)
+                if average_generation_seconds is not None
+                else "—"
+            ),
+            "generation_sample_count": len(generation_durations),
             "account_count_chart": build_account_count_chart(account_count),
         },
     )
@@ -475,6 +509,7 @@ def generate_repository_questions(
             "generated_by": request.user,
             "model_name": settings.OPENAI_QUESTION_MODEL,
             "status": QuestionSet.Status.GENERATING,
+            "generation_started_at": timezone.now(),
         },
     )
     if not created and question_set.status == QuestionSet.Status.COMPLETE:
@@ -486,7 +521,16 @@ def generate_repository_questions(
     if not created:
         question_set.status = QuestionSet.Status.GENERATING
         question_set.error_message = ""
-        question_set.save(update_fields=("status", "error_message"))
+        question_set.generation_started_at = timezone.now()
+        question_set.completed_at = None
+        question_set.save(
+            update_fields=(
+                "status",
+                "error_message",
+                "generation_started_at",
+                "completed_at",
+            )
+        )
 
     try:
         generated = generate_questions_for_repository(repository, request.user)

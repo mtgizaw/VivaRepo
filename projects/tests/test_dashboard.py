@@ -1,8 +1,11 @@
 """Tests for the VivaRepo account dashboard."""
 
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from assessments.models import FreeResponseQuestion, QuestionSet
 from projects.models import Repository
@@ -29,11 +32,14 @@ class AccountDashboardTests(TestCase):
             size_bytes=4500,
             uploaded_by=active_user,
         )
+        generation_started_at = timezone.now()
         question_set = QuestionSet.objects.create(
             repository=repository,
             generated_by=active_user,
             status=QuestionSet.Status.COMPLETE,
             model_name="gpt-test",
+            generation_started_at=generation_started_at,
+            completed_at=generation_started_at + timedelta(seconds=42),
         )
         FreeResponseQuestion.objects.bulk_create(
             [
@@ -55,6 +61,9 @@ class AccountDashboardTests(TestCase):
         self.assertEqual(response.context["account_count"], 2)
         self.assertEqual(response.context["repository_count"], 1)
         self.assertEqual(response.context["question_count"], 5)
+        self.assertEqual(response.context["average_generation_seconds"], 42)
+        self.assertEqual(response.context["average_generation_time"], "42 sec")
+        self.assertEqual(response.context["generation_sample_count"], 1)
         self.assertEqual(
             response.context["topic_tallies"],
             [
@@ -65,6 +74,8 @@ class AccountDashboardTests(TestCase):
         self.assertContains(response, "Registered accounts")
         self.assertContains(response, "Repositories uploaded")
         self.assertContains(response, "Questions generated")
+        self.assertContains(response, "Average generation time")
+        self.assertContains(response, "42 sec")
         self.assertContains(response, "Question topics tested")
         self.assertContains(response, "Stacks")
         self.assertContains(response, "Complexity")
@@ -82,4 +93,8 @@ class AccountDashboardTests(TestCase):
         self.assertEqual(response.context["repository_count"], 0)
         self.assertEqual(response.context["question_count"], 0)
         self.assertEqual(response.context["topic_tallies"], [])
+        self.assertIsNone(response.context["average_generation_seconds"])
+        self.assertEqual(response.context["average_generation_time"], "—")
+        self.assertEqual(response.context["generation_sample_count"], 0)
         self.assertContains(response, "Question topics will appear")
+        self.assertContains(response, "Timing begins when")
