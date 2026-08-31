@@ -296,7 +296,9 @@ def generate_questions_for_repository(repository, user) -> GeneratedQuestionSet:
                 "schema": QUESTION_SCHEMA,
             }
         },
-        "reasoning": {"effort": "low"},
+        "reasoning": {
+            "effort": settings.OPENAI_QUESTION_REASONING_EFFORT,
+        },
         "store": False,
         "max_output_tokens": 6_000,
         "safety_identifier": sha256(

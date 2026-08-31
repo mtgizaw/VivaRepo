@@ -221,6 +221,7 @@ class OpenAIAnswerEvaluationServiceTests(TestCase):
     @override_settings(
         OPENAI_API_KEY="test-key",
         OPENAI_EVALUATION_MODEL="gpt-evaluation-test",
+        OPENAI_EVALUATION_REASONING_EFFORT="low",
     )
     @patch("ai.answer_evaluation.urlopen")
     def test_responses_request_uses_strict_evaluation_schema(self, urlopen_mock):
@@ -283,7 +284,7 @@ class OpenAIAnswerEvaluationServiceTests(TestCase):
         payload = json.loads(request.data)
         schema = payload["text"]["format"]["schema"]
         self.assertFalse(payload["store"])
-        self.assertEqual(payload["reasoning"]["effort"], "medium")
+        self.assertEqual(payload["reasoning"]["effort"], "low")
         self.assertTrue(payload["text"]["format"]["strict"])
         self.assertEqual(
             schema["properties"]["question_feedback"]["minItems"],

@@ -222,6 +222,7 @@ class OpenAIQuestionServiceTests(TestCase):
     @override_settings(
         OPENAI_API_KEY="test-key",
         OPENAI_QUESTION_MODEL="gpt-test",
+        OPENAI_QUESTION_REASONING_EFFORT="high",
     )
     @patch("ai.repository_questions.urlopen")
     def test_responses_request_uses_strict_five_question_schema(self, urlopen_mock):
@@ -270,7 +271,7 @@ class OpenAIQuestionServiceTests(TestCase):
         payload = json.loads(request.data)
         schema = payload["text"]["format"]["schema"]
         self.assertFalse(payload["store"])
-        self.assertEqual(payload["reasoning"]["effort"], "low")
+        self.assertEqual(payload["reasoning"]["effort"], "high")
         self.assertEqual(payload["max_output_tokens"], 6000)
         self.assertTrue(payload["text"]["format"]["strict"])
         self.assertEqual(schema["properties"]["questions"]["minItems"], 5)

@@ -277,7 +277,9 @@ def evaluate_assessment_answers(
                 "schema": EVALUATION_SCHEMA,
             }
         },
-        "reasoning": {"effort": "medium"},
+        "reasoning": {
+            "effort": settings.OPENAI_EVALUATION_REASONING_EFFORT,
+        },
         "store": False,
         "max_output_tokens": 10_000,
         "safety_identifier": sha256(
