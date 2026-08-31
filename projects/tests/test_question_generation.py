@@ -280,6 +280,8 @@ class OpenAIQuestionServiceTests(TestCase):
             "properties"
         ]["focus_area"]
         self.assertEqual(focus_area_schema["enum"], list(QUESTION_TOPICS))
+        for topic in QUESTION_TOPICS:
+            self.assertIn(f"{topic} covers", payload["instructions"])
         self.assertIn("Do not invent or combine labels", payload["instructions"])
         self.assertIn("project/app.py", payload["input"])
         self.assertEqual(len(result.questions), 5)

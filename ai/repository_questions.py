@@ -17,10 +17,24 @@ MAX_CONTEXT_CHARACTERS = 100_000
 MAX_FILE_CHARACTERS = 20_000
 MAX_CONTEXT_FILES = 80
 QUESTION_TOPICS = (
-    "Data Representation & State Flow",
-    "Contracts & Invariants",
-    "API Behavior, Edge Cases & Failures",
-    "Testing & Quality",
+    "Requirements",
+    "Architecture",
+    "Design",
+    "Construction",
+    "Testing",
+    "Engineering Operations",
+    "Maintenance",
+    "Configuration Management",
+    "Engineering Management",
+    "Engineering Process",
+    "Engineering Models & Methods",
+    "Quality",
+    "Security",
+    "Engineering Professionalism",
+    "Engineering Economics",
+    "Computing Foundations",
+    "Mathematical Foundations",
+    "Engineering Foundations",
 )
 
 TEXT_EXTENSIONS = {
@@ -298,12 +312,61 @@ def generate_questions_for_repository(repository, user) -> GeneratedQuestionSet:
             "and reference answer in the supplied files. Do not ask trivia, multiple-"
             "choice questions, or questions that require knowledge absent from the code. "
             "Assign each question exactly one approved focus-area label based on its "
-            "primary learning objective: Data Representation & State Flow covers data "
-            "structures, internal representation, state transitions, and data flow; "
-            "Contracts & Invariants covers validation, preconditions, invariants, and "
-            "correctness guarantees; API Behavior, Edge Cases & Failures covers public "
-            "API semantics, boundaries, empty states, exceptions, and failure behavior; "
-            "Testing & Quality covers test design, coverage, gaps, and verification. "
+            "primary learning objective:\n"
+            "1. Requirements covers the elicitation, analysis, specification, validation, "
+            "prioritization, traceability, and management of functional, nonfunctional, "
+            "product, and project requirements.\n"
+            "2. Architecture covers a system's fundamental organization, components, "
+            "relationships, views, patterns, significant decisions, quality concerns, and "
+            "architectural analysis and evaluation.\n"
+            "3. Design covers high-level and detailed design, design principles and "
+            "qualities, interfaces, data and control organization, patterns, rationale, "
+            "and design analysis or evaluation.\n"
+            "4. Construction covers coding, complexity management, reusable components, "
+            "APIs, assertions and contracts, error handling, integration, performance, "
+            "construction standards, and development tools.\n"
+            "5. Testing covers test planning, case design, selection and adequacy criteria, "
+            "testing levels and techniques, execution, test measurement, and analysis of "
+            "faults, failures, and results.\n"
+            "6. Engineering Operations covers deployment and release operations, runtime "
+            "environments, monitoring, troubleshooting, availability, capacity, service "
+            "continuity, backup, recovery, and operational support.\n"
+            "7. Maintenance covers post-delivery correction and adaptation, enhancement, "
+            "preventive change, impact analysis, migration, reengineering, technical debt, "
+            "and software retirement.\n"
+            "8. Configuration Management covers configuration identification, versions "
+            "and baselines, change control, status accounting, configuration audits, build "
+            "management, and release management.\n"
+            "9. Engineering Management covers project initiation and scope, feasibility, "
+            "planning, estimation, scheduling, resources, risks, quality, execution, "
+            "monitoring, measurement, review, and closure.\n"
+            "10. Engineering Process covers software life cycles, process definition and "
+            "implementation, process infrastructure, monitoring, assessment, measurement, "
+            "adaptation, and continuous improvement.\n"
+            "11. Engineering Models & Methods covers modeling principles, structural and "
+            "behavioral models, preconditions, postconditions, invariants, model analysis, "
+            "and heuristic, formal, prototyping, or agile methods.\n"
+            "12. Quality covers quality attributes, dependability and integrity, quality "
+            "planning and measurement, assurance and control, verification and validation, "
+            "reviews, audits, defect analysis, and improvement.\n"
+            "13. Security covers security requirements, secure design and construction, "
+            "secure development processes, security testing, vulnerability management, "
+            "protective controls, and security tools.\n"
+            "14. Engineering Professionalism covers ethics, standards, legal and privacy "
+            "responsibilities, documentation, trade-off analysis, teamwork, stakeholder "
+            "interaction, communication, and handling uncertainty.\n"
+            "15. Engineering Economics covers economic decision-making, feasibility, cost "
+            "and benefit analysis, life-cycle economics, alternatives, investment, value, "
+            "and the financial consequences of engineering choices.\n"
+            "16. Computing Foundations covers systems concepts, computer architecture, data "
+            "structures and algorithms, programming languages, debugging, operating "
+            "systems, databases, networks, human factors, and artificial intelligence.\n"
+            "17. Mathematical Foundations covers logic, proof techniques, sets, relations, "
+            "functions, graphs, trees, finite-state machines, grammars, counting, "
+            "probability, numerical precision, algebraic structures, and calculus.\n"
+            "18. Engineering Foundations covers engineering processes and design, "
+            "abstraction and encapsulation, empirical and statistical methods, modeling, "
+            "simulation, prototyping, measurement, standards, and root-cause analysis.\n"
             "Do not invent or combine labels, and do not force an even distribution when "
             "the repository evidence supports concentrating on particular categories."
         ),
