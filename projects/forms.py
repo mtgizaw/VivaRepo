@@ -8,6 +8,8 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import AbstractBaseUser
 
+from ai.repository_questions import QuestionGenerationError, build_archive_context
+
 from .models import Repository
 
 
@@ -16,6 +18,42 @@ User = get_user_model()
 MAX_ARCHIVE_SIZE = 50 * 1024 * 1024
 MAX_UNCOMPRESSED_SIZE = 500 * 1024 * 1024
 MAX_ARCHIVE_FILES = 20_000
+
+
+def validate_repository_archive(archive) -> str:
+    """Validate a ZIP and return the durable, bounded source context."""
+    if not archive.name.lower().endswith(".zip"):
+        raise forms.ValidationError("Upload a repository as a .zip file.")
+    if archive.size > MAX_ARCHIVE_SIZE:
+        raise forms.ValidationError("The ZIP file must be 50 MB or smaller.")
+
+    try:
+        archive.seek(0)
+        with ZipFile(archive) as zip_file:
+            files = [entry for entry in zip_file.infolist() if not entry.is_dir()]
+            if not files:
+                raise forms.ValidationError("The ZIP file does not contain any files.")
+            if len(files) > MAX_ARCHIVE_FILES:
+                raise forms.ValidationError("The ZIP file contains too many files.")
+            if sum(entry.file_size for entry in files) > MAX_UNCOMPRESSED_SIZE:
+                raise forms.ValidationError(
+                    "The repository is too large after decompression."
+                )
+            for entry in files:
+                path = PurePosixPath(entry.filename.replace("\\", "/"))
+                if path.is_absolute() or ".." in path.parts:
+                    raise forms.ValidationError(
+                        "The ZIP file contains an unsafe file path."
+                    )
+    except (BadZipFile, OSError):
+        raise forms.ValidationError("The selected file is not a valid ZIP archive.")
+    finally:
+        archive.seek(0)
+
+    try:
+        return build_archive_context(archive)
+    except QuestionGenerationError as exc:
+        raise forms.ValidationError(str(exc)) from exc
 
 
 class SignupForm(UserCreationForm):
@@ -97,32 +135,16 @@ class RepositoryUploadForm(forms.ModelForm):
 
     def clean_archive(self):
         archive = self.cleaned_data["archive"]
-        if not archive.name.lower().endswith(".zip"):
-            raise forms.ValidationError("Upload a repository as a .zip file.")
-        if archive.size > MAX_ARCHIVE_SIZE:
-            raise forms.ValidationError("The ZIP file must be 50 MB or smaller.")
+        self.repository_context = validate_repository_archive(archive)
+        return archive
 
-        try:
-            archive.seek(0)
-            with ZipFile(archive) as zip_file:
-                files = [entry for entry in zip_file.infolist() if not entry.is_dir()]
-                if not files:
-                    raise forms.ValidationError("The ZIP file does not contain any files.")
-                if len(files) > MAX_ARCHIVE_FILES:
-                    raise forms.ValidationError("The ZIP file contains too many files.")
-                if sum(entry.file_size for entry in files) > MAX_UNCOMPRESSED_SIZE:
-                    raise forms.ValidationError(
-                        "The repository is too large after decompression."
-                    )
-                for entry in files:
-                    path = PurePosixPath(entry.filename.replace("\\", "/"))
-                    if path.is_absolute() or ".." in path.parts:
-                        raise forms.ValidationError(
-                            "The ZIP file contains an unsafe file path."
-                        )
-        except (BadZipFile, OSError):
-            raise forms.ValidationError("The selected file is not a valid ZIP archive.")
-        finally:
-            archive.seek(0)
 
+class RepositoryArchiveReplacementForm(forms.Form):
+    """Replace an unavailable archive while preserving the repository record."""
+
+    archive = forms.FileField()
+
+    def clean_archive(self):
+        archive = self.cleaned_data["archive"]
+        self.repository_context = validate_repository_archive(archive)
         return archive

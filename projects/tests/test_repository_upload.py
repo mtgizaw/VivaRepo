@@ -89,6 +89,7 @@ class RepositoryUploadTests(TestCase):
         self.assertEqual(repository.uploaded_by, self.user)
         self.assertEqual(repository.original_filename, "project.zip")
         self.assertGreater(repository.size_bytes, 0)
+        self.assertIn("project/app.py", repository.source_context)
         self.assertContains(response, "was uploaded and is ready for analysis")
         self.assertContains(response, "Habit tracker")
 

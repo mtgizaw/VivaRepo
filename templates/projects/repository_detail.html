@@ -51,12 +51,21 @@
             <div class="repository-icon" aria-hidden="true">&lt;/&gt;</div>
             <h2>{% if question_set.status == "failed" %}Generation needs another try{% else %}Ready to explore this repository?{% endif %}</h2>
             <p>{% if question_set.error_message %}{{ question_set.error_message }}{% else %}Generate five questions that test your understanding of the uploaded code.{% endif %}</p>
-            <form method="post" action="{% url 'projects:generate_repository_questions' repository.pk %}" data-generate-form>
-                {% csrf_token %}
-                <button class="button button-primary generate-button" type="submit" data-generate-label>
-                    {% if question_set.status == "failed" %}Try again{% else %}Generate five questions{% endif %}
-                </button>
-            </form>
+            {% if zip_read_failed %}
+                <form class="replace-archive-form" method="post" enctype="multipart/form-data" action="{% url 'projects:replace_repository_archive' repository.pk %}" data-generate-form>
+                    {% csrf_token %}
+                    <label for="replacement-archive">Replace the unavailable ZIP</label>
+                    <input id="replacement-archive" name="archive" type="file" accept=".zip,application/zip" required>
+                    <button class="button button-primary generate-button" type="submit" data-generate-label>Upload ZIP and generate</button>
+                </form>
+            {% else %}
+                <form method="post" action="{% url 'projects:generate_repository_questions' repository.pk %}" data-generate-form>
+                    {% csrf_token %}
+                    <button class="button button-primary generate-button" type="submit" data-generate-label>
+                        {% if question_set.status == "failed" %}Try again{% else %}Generate five questions{% endif %}
+                    </button>
+                </form>
+            {% endif %}
         </div>
     {% endif %}
 </section>

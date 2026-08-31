@@ -21,7 +21,12 @@ from ai.repository_questions import (
 )
 from assessments.models import FreeResponseQuestion, QuestionSet
 
-from .forms import EmailLoginForm, RepositoryUploadForm, SignupForm
+from .forms import (
+    EmailLoginForm,
+    RepositoryArchiveReplacementForm,
+    RepositoryUploadForm,
+    SignupForm,
+)
 from .models import Repository
 
 
@@ -160,6 +165,7 @@ def upload_repository(request: HttpRequest) -> HttpResponse:
         repository.uploaded_by = request.user
         repository.original_filename = form.cleaned_data["archive"].name
         repository.size_bytes = form.cleaned_data["archive"].size
+        repository.source_context = form.repository_context
         repository.save()
         messages.success(
             request,
@@ -189,6 +195,13 @@ def repository_detail(request: HttpRequest, repository_id: int) -> HttpResponse:
         if question_set and question_set.status == QuestionSet.Status.COMPLETE
         else []
     )
+    zip_read_failed = bool(
+        question_set
+        and question_set.status == QuestionSet.Status.FAILED
+        and question_set.error_message.startswith(
+            "VivaRepo could not read this repository ZIP"
+        )
+    )
     return render(
         request,
         "projects/repository_detail.html",
@@ -196,8 +209,54 @@ def repository_detail(request: HttpRequest, repository_id: int) -> HttpResponse:
             "repository": repository,
             "question_set": question_set,
             "questions": questions,
+            "zip_read_failed": zip_read_failed,
         },
     )
+
+
+@login_required
+@require_POST
+def replace_repository_archive(
+    request: HttpRequest,
+    repository_id: int,
+) -> HttpResponse:
+    """Replace a missing ZIP, persist its source context, and retry generation."""
+    repository = get_object_or_404(
+        Repository,
+        pk=repository_id,
+        uploaded_by=request.user,
+    )
+    question_set = getattr(repository, "question_set", None)
+    if question_set and question_set.status == QuestionSet.Status.COMPLETE:
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+
+    form = RepositoryArchiveReplacementForm(request.POST, request.FILES)
+    if not form.is_valid():
+        error_message = next(
+            (
+                str(error)
+                for field_errors in form.errors.values()
+                for error in field_errors
+            ),
+            "Select a valid repository ZIP and try again.",
+        )
+        messages.error(request, error_message)
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+
+    archive = form.cleaned_data["archive"]
+    repository.archive = archive
+    repository.original_filename = archive.name
+    repository.size_bytes = archive.size
+    repository.source_context = form.repository_context
+    repository.save(
+        update_fields=(
+            "archive",
+            "original_filename",
+            "size_bytes",
+            "source_context",
+        )
+    )
+    return generate_repository_questions(request, repository.pk)
 
 
 @login_required

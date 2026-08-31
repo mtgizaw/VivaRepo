@@ -123,11 +123,11 @@ def _file_priority(path: PurePosixPath) -> tuple[int, str]:
     return (3, path.as_posix())
 
 
-def build_repository_context(repository) -> str:
-    """Read a bounded, text-only view of a repository without extracting it."""
+def build_archive_context(archive_file) -> str:
+    """Read a bounded, text-only archive view without extracting it."""
     try:
-        repository.archive.open("rb")
-        with ZipFile(repository.archive) as archive:
+        archive_file.seek(0)
+        with ZipFile(archive_file) as archive:
             candidates = []
             for entry in archive.infolist():
                 path = PurePosixPath(entry.filename.replace("\\", "/"))
@@ -163,13 +163,33 @@ def build_repository_context(repository) -> str:
             "VivaRepo could not read this repository ZIP. Please upload it again."
         ) from exc
     finally:
-        repository.archive.close()
+        try:
+            archive_file.seek(0)
+        except (OSError, ValueError):
+            pass
 
     if not sections:
         raise QuestionGenerationError(
             "No supported text or source-code files were found in this repository."
         )
     return "\n\n".join(sections)
+
+
+def build_repository_context(repository) -> str:
+    """Use durable source context, falling back to the stored archive when needed."""
+    if repository.source_context.strip():
+        return repository.source_context
+
+    try:
+        repository.archive.open("rb")
+    except (FileNotFoundError, OSError, ValueError) as exc:
+        raise QuestionGenerationError(
+            "VivaRepo could not read this repository ZIP. Please upload it again."
+        ) from exc
+    try:
+        return build_archive_context(repository.archive)
+    finally:
+        repository.archive.close()
 
 
 def _parse_questions(payload: dict) -> list[dict]:

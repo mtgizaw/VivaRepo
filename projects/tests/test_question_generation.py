@@ -144,6 +144,43 @@ class RepositoryQuestionViewTests(TestCase):
         self.assertEqual(question_set.questions.count(), 5)
         self.assertContains(response, "Question 1")
 
+    @patch("projects.views.generate_questions_for_repository")
+    def test_missing_archive_can_be_replaced_and_generated(self, generate):
+        self.repository.archive = "repository_archives/missing.zip"
+        self.repository.source_context = ""
+        self.repository.save(update_fields=("archive", "source_context"))
+        question_set = QuestionSet.objects.create(
+            repository=self.repository,
+            generated_by=self.user,
+            model_name="gpt-test",
+            status=QuestionSet.Status.FAILED,
+            error_message=(
+                "VivaRepo could not read this repository ZIP. Please upload it again."
+            ),
+        )
+        generate.return_value = GeneratedQuestionSet(
+            questions=five_questions(),
+            response_id="resp_replaced",
+            model_name="gpt-test",
+        )
+
+        response = self.client.post(
+            reverse("projects:replace_repository_archive", args=[self.repository.pk]),
+            {"archive": repository_zip("boundedstack-replacement.zip")},
+            follow=True,
+        )
+
+        self.repository.refresh_from_db()
+        question_set.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("project/app.py", self.repository.source_context)
+        self.assertEqual(
+            self.repository.original_filename,
+            "boundedstack-replacement.zip",
+        )
+        self.assertEqual(question_set.status, QuestionSet.Status.COMPLETE)
+        self.assertContains(response, "Question 1")
+
     def test_other_users_cannot_view_or_generate_for_repository(self):
         other = User.objects.create_user(username="other", password="password")
         self.client.force_login(other)
@@ -233,4 +270,51 @@ class OpenAIQuestionServiceTests(TestCase):
         self.assertEqual(schema["properties"]["questions"]["minItems"], 5)
         self.assertEqual(schema["properties"]["questions"]["maxItems"], 5)
         self.assertIn("project/app.py", payload["input"])
+        self.assertEqual(len(result.questions), 5)
+
+    @override_settings(
+        OPENAI_API_KEY="test-key",
+        OPENAI_QUESTION_MODEL="gpt-test",
+    )
+    @patch("ai.repository_questions.urlopen")
+    def test_durable_source_context_works_when_archive_is_missing(self, urlopen_mock):
+        from ai.repository_questions import generate_questions_for_repository
+
+        user = User.objects.create_user(username="durable-user")
+        repository = Repository.objects.create(
+            name="Durable repository",
+            archive="repository_archives/no-longer-on-disk.zip",
+            original_filename="repository.zip",
+            size_bytes=100,
+            source_context='<file path="src/app.py">\nprint("hello")\n</file>',
+            uploaded_by=user,
+        )
+        api_response = BytesIO(
+            json.dumps(
+                {
+                    "id": "resp_durable",
+                    "model": "gpt-test",
+                    "status": "completed",
+                    "output": [
+                        {
+                            "type": "message",
+                            "content": [
+                                {
+                                    "type": "output_text",
+                                    "text": json.dumps(
+                                        {"questions": five_questions()}
+                                    ),
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ).encode("utf-8")
+        )
+        urlopen_mock.return_value = api_response
+
+        result = generate_questions_for_repository(repository, user)
+
+        payload = json.loads(urlopen_mock.call_args.args[0].data)
+        self.assertIn("src/app.py", payload["input"])
         self.assertEqual(len(result.questions), 5)

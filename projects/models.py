@@ -15,6 +15,7 @@ class Repository(models.Model):
     )
     original_filename = models.CharField(max_length=255)
     size_bytes = models.PositiveBigIntegerField()
+    source_context = models.TextField(blank=True)
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

@@ -26,6 +26,11 @@ urlpatterns = [
         views.generate_repository_questions,
         name="generate_repository_questions",
     ),
+    path(
+        "repositories/<int:repository_id>/replace-archive/",
+        views.replace_repository_archive,
+        name="replace_repository_archive",
+    ),
     path("signup/", views.signup, name="signup"),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),

@@ -981,6 +981,42 @@ h1 {
     opacity: 0.72;
 }
 
+.replace-archive-form {
+    display: grid;
+    width: min(100%, 430px);
+    gap: 0.8rem;
+    padding: 1rem;
+    border: 1px solid #dce3ef;
+    border-radius: 0.85rem;
+    background: #f7f9ff;
+    text-align: left;
+}
+
+.replace-archive-form label {
+    color: #24324b;
+    font-size: 0.88rem;
+    font-weight: 750;
+}
+
+.replace-archive-form input {
+    width: 100%;
+    color: #40516f;
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+.replace-archive-form input::file-selector-button {
+    margin-right: 0.65rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #cbd5e7;
+    border-radius: 0.5rem;
+    color: #24324b;
+    background: white;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 .loading-mark {
     width: 2.5rem;
     height: 2.5rem;
