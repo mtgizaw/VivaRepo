@@ -482,6 +482,64 @@ h1 {
     text-align: center;
 }
 
+.dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.summary-metric-card {
+    position: relative;
+    padding: 1.5rem;
+    overflow: hidden;
+    border: 1px solid #dce3ef;
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 18px 42px rgba(31, 49, 86, 0.08);
+}
+
+.summary-metric-icon {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: 0.7rem;
+    color: #3155d9;
+    background: #edf2ff;
+    font-size: 0.78rem;
+    font-weight: 850;
+}
+
+.summary-metric-icon-question {
+    font-size: 1rem;
+}
+
+.summary-metric-value {
+    margin: 0 3.25rem 0.8rem 0;
+    color: #101a32;
+    font-size: clamp(2.5rem, 7vw, 4rem);
+    font-weight: 850;
+    line-height: 1;
+    letter-spacing: -0.05em;
+}
+
+.summary-metric-card h2 {
+    margin: 0;
+    color: #24324b;
+    font-size: 1rem;
+}
+
+.summary-metric-card > p:last-child {
+    margin: 0.55rem 0 0;
+    color: #71809a;
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
 .upload-page {
     max-width: 980px;
     margin: clamp(2.5rem, 7vh, 5rem) auto 5rem;
@@ -964,6 +1022,10 @@ h1 {
     .metric-details {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .dashboard-metrics {
+        grid-template-columns: 1fr;
     }
 
     .upload-layout {

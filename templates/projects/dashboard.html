@@ -19,5 +19,25 @@
             <p class="metric-fallback">{{ account_count }}</p>
         </noscript>
     </article>
+
+    <div class="dashboard-metrics">
+        <article class="summary-metric-card" aria-label="Total repositories uploaded: {{ repository_count }}">
+            <div class="summary-metric-icon" aria-hidden="true">&lt;/&gt;</div>
+            <p class="summary-metric-value">{{ repository_count }}</p>
+            <h2>Repositories uploaded</h2>
+            <p>ZIP repositories added across all VivaRepo accounts.</p>
+        </article>
+
+        <article class="summary-metric-card" aria-label="Total free-response questions generated: {{ question_count }}">
+            <div class="summary-metric-icon summary-metric-icon-question" aria-hidden="true">?</div>
+            <p class="summary-metric-value">{{ question_count }}</p>
+            <h2>Questions generated</h2>
+            <p>Free-response questions created from uploaded code.</p>
+        </article>
+    </div>
+
+    <p class="dashboard-note">
+        These are aggregate platform totals. No personal account information is displayed.
+    </p>
 </section>
 {% endblock %}

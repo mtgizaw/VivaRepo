@@ -80,13 +80,17 @@ def about(request: HttpRequest) -> HttpResponse:
 
 
 def account_dashboard(request: HttpRequest) -> HttpResponse:
-    """Show the live number of accounts in Django's configured user model."""
+    """Show aggregate VivaRepo account, repository, and question totals."""
     account_count = User.objects.count()
+    repository_count = Repository.objects.count()
+    question_count = FreeResponseQuestion.objects.count()
     return render(
         request,
         "projects/dashboard.html",
         {
             "account_count": account_count,
+            "repository_count": repository_count,
+            "question_count": question_count,
             "account_count_chart": build_account_count_chart(account_count),
         },
     )
