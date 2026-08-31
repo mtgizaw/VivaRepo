@@ -740,12 +740,49 @@ h1 {
     padding: 1rem 1.5rem;
 }
 
-.repository-list > * + * {
+.repository-list-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+}
+
+.repository-list-item + .repository-list-item {
     border-top: 1px solid #edf0f5;
 }
 
 .repository-row-form {
+    min-width: 0;
     margin: 0;
+}
+
+.repository-remove-form {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding-right: 1.5rem;
+}
+
+.repository-remove {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #e4a6aa;
+    border-radius: 0.55rem;
+    color: #a3262f;
+    background: #fff;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: border-color 150ms ease, background 150ms ease;
+}
+
+.repository-remove:hover {
+    border-color: #c3444d;
+    background: #fff1f2;
+}
+
+.repository-remove:focus-visible {
+    outline: 3px solid rgba(195, 68, 77, 0.22);
+    outline-offset: 2px;
 }
 
 .repository-row-action {

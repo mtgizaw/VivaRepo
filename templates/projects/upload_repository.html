@@ -95,30 +95,36 @@
             </div>
             <div class="repository-list">
                 {% for repository in repositories %}
-                    {% if repository.question_set.status == "complete" %}
-                        <a class="repository-row repository-row-action" href="{% url 'projects:repository_detail' repository.pk %}">
-                            <div class="repository-icon" aria-hidden="true">&lt;/&gt;</div>
-                            <div>
-                                <h3>{{ repository.name }}</h3>
-                                <p>{{ repository.original_filename }} · {{ repository.size_bytes|filesizeformat }}</p>
-                            </div>
-                            <span class="repository-next">View questions <span aria-hidden="true">→</span></span>
-                        </a>
-                    {% else %}
-                        <form class="repository-row-form" method="post" action="{% url 'projects:generate_repository_questions' repository.pk %}" data-generate-form>
-                            {% csrf_token %}
-                            <button class="repository-row repository-row-action" type="submit" aria-label="Generate five questions for {{ repository.name }}">
+                    <div class="repository-list-item">
+                        {% if repository.question_set.status == "complete" %}
+                            <a class="repository-row repository-row-action" href="{% url 'projects:repository_detail' repository.pk %}">
                                 <div class="repository-icon" aria-hidden="true">&lt;/&gt;</div>
                                 <div>
                                     <h3>{{ repository.name }}</h3>
                                     <p>{{ repository.original_filename }} · {{ repository.size_bytes|filesizeformat }}</p>
                                 </div>
-                                <span class="repository-next" data-generate-label>
-                                    {% if repository.question_set.status == "generating" %}Generating…{% else %}Generate questions <span aria-hidden="true">→</span>{% endif %}
-                                </span>
-                            </button>
+                                <span class="repository-next">View questions <span aria-hidden="true">→</span></span>
+                            </a>
+                        {% else %}
+                            <form class="repository-row-form" method="post" action="{% url 'projects:generate_repository_questions' repository.pk %}" data-generate-form>
+                                {% csrf_token %}
+                                <button class="repository-row repository-row-action" type="submit" aria-label="Generate five questions for {{ repository.name }}">
+                                    <div class="repository-icon" aria-hidden="true">&lt;/&gt;</div>
+                                    <div>
+                                        <h3>{{ repository.name }}</h3>
+                                        <p>{{ repository.original_filename }} · {{ repository.size_bytes|filesizeformat }}</p>
+                                    </div>
+                                    <span class="repository-next" data-generate-label>
+                                        {% if repository.question_set.status == "generating" %}Generating…{% else %}Generate questions <span aria-hidden="true">→</span>{% endif %}
+                                    </span>
+                                </button>
+                            </form>
+                        {% endif %}
+                        <form class="repository-remove-form" method="post" action="{% url 'projects:delete_repository' repository.pk %}" data-remove-form data-repository-name="{{ repository.name }}">
+                            {% csrf_token %}
+                            <button class="repository-remove" type="submit" aria-label="Remove {{ repository.name }}">Remove</button>
                         </form>
-                    {% endif %}
+                    </div>
                 {% endfor %}
             </div>
         </section>
@@ -134,6 +140,15 @@
             const label = form.querySelector("[data-generate-label]");
             button.disabled = true;
             label.textContent = "Generating questions…";
+        });
+    });
+
+    document.querySelectorAll("[data-remove-form]").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+            const repositoryName = form.dataset.repositoryName;
+            if (!window.confirm(`Remove "${repositoryName}" and its generated assessment? This cannot be undone.`)) {
+                event.preventDefault();
+            }
         });
     });
 </script>

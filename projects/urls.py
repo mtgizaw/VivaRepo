@@ -22,6 +22,11 @@ urlpatterns = [
         name="repository_detail",
     ),
     path(
+        "repositories/<int:repository_id>/delete/",
+        views.delete_repository,
+        name="delete_repository",
+    ),
+    path(
         "repositories/<int:repository_id>/generate-questions/",
         views.generate_repository_questions,
         name="generate_repository_questions",

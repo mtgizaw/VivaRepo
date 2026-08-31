@@ -1,6 +1,7 @@
 """Tests for authenticated repository intake."""
 
 from io import BytesIO
+from pathlib import Path
 import shutil
 import tempfile
 from zipfile import ZipFile
@@ -92,6 +93,11 @@ class RepositoryUploadTests(TestCase):
         self.assertIn("project/app.py", repository.source_context)
         self.assertContains(response, "was uploaded and is ready for analysis")
         self.assertContains(response, "Habit tracker")
+        self.assertContains(
+            response,
+            reverse("projects:delete_repository", args=[repository.pk]),
+        )
+        self.assertContains(response, "Remove")
 
     def test_non_zip_file_is_rejected(self):
         self.client.force_login(self.user)
@@ -122,3 +128,60 @@ class RepositoryUploadTests(TestCase):
         response = self.client.get(reverse("projects:upload_repository"))
 
         self.assertNotContains(response, "Someone else&#x27;s project")
+
+    def test_user_can_delete_their_repository_and_stored_archive(self):
+        repository = Repository.objects.create(
+            name="Old project",
+            archive=repository_zip("old-project.zip"),
+            original_filename="old-project.zip",
+            size_bytes=100,
+            uploaded_by=self.user,
+        )
+        archive_path = Path(repository.archive.path)
+        self.assertTrue(archive_path.exists())
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("projects:delete_repository", args=[repository.pk]),
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Repository.objects.filter(pk=repository.pk).exists())
+        self.assertFalse(archive_path.exists())
+        self.assertContains(response, "&quot;Old project&quot; was removed.")
+
+    def test_user_cannot_delete_another_users_repository(self):
+        other = User.objects.create_user(username="other-owner", password=self.password)
+        repository = Repository.objects.create(
+            name="Other project",
+            archive=repository_zip("other-project.zip"),
+            original_filename="other-project.zip",
+            size_bytes=100,
+            uploaded_by=other,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("projects:delete_repository", args=[repository.pk]),
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(Repository.objects.filter(pk=repository.pk).exists())
+
+    def test_repository_delete_requires_post(self):
+        repository = Repository.objects.create(
+            name="Keep project",
+            archive=repository_zip("keep-project.zip"),
+            original_filename="keep-project.zip",
+            size_bytes=100,
+            uploaded_by=self.user,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("projects:delete_repository", args=[repository.pk]),
+        )
+
+        self.assertEqual(response.status_code, 405)
+        self.assertTrue(Repository.objects.filter(pk=repository.pk).exists())

@@ -180,12 +180,33 @@ def upload_repository(request: HttpRequest) -> HttpResponse:
         )
         return redirect("projects:upload_repository")
 
-    repositories = request.user.repositories.select_related("question_set").all()[:6]
+    repositories = request.user.repositories.select_related("question_set").all()
     return render(
         request,
         "projects/upload_repository.html",
         {"form": form, "repositories": repositories},
     )
+
+
+@login_required
+@require_POST
+def delete_repository(request: HttpRequest, repository_id: int) -> HttpResponse:
+    """Delete a repository owned by the signed-in user and its stored archive."""
+    repository = get_object_or_404(
+        Repository,
+        pk=repository_id,
+        uploaded_by=request.user,
+    )
+    repository_name = repository.name
+    archive_name = repository.archive.name
+    archive_storage = repository.archive.storage
+
+    repository.delete()
+    if archive_name:
+        archive_storage.delete(archive_name)
+
+    messages.success(request, f'"{repository_name}" was removed.')
+    return redirect("projects:upload_repository")
 
 
 @login_required
