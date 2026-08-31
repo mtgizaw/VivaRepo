@@ -115,6 +115,35 @@ class RepositoryQuestionViewTests(TestCase):
         )
         generate.assert_not_called()
 
+    @patch("projects.views.generate_questions_for_repository")
+    def test_failed_set_can_be_retried_after_parser_fix(self, generate):
+        question_set = QuestionSet.objects.create(
+            repository=self.repository,
+            generated_by=self.user,
+            model_name="gpt-test",
+            status=QuestionSet.Status.FAILED,
+            error_message="OpenAI returned an unexpected result.",
+        )
+        generate.return_value = GeneratedQuestionSet(
+            questions=five_questions(),
+            response_id="resp_retry",
+            model_name="gpt-test",
+        )
+
+        response = self.client.post(
+            reverse(
+                "projects:generate_repository_questions",
+                args=[self.repository.pk],
+            ),
+            follow=True,
+        )
+
+        question_set.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(question_set.status, QuestionSet.Status.COMPLETE)
+        self.assertEqual(question_set.questions.count(), 5)
+        self.assertContains(response, "Question 1")
+
     def test_other_users_cannot_view_or_generate_for_repository(self):
         other = User.objects.create_user(username="other", password="password")
         self.client.force_login(other)
@@ -168,7 +197,23 @@ class OpenAIQuestionServiceTests(TestCase):
                 {
                     "id": "resp_test",
                     "model": "gpt-test",
-                    "output_text": json.dumps({"questions": five_questions()}),
+                    "status": "completed",
+                    "output": [
+                        {
+                            "type": "message",
+                            "status": "completed",
+                            "role": "assistant",
+                            "content": [
+                                {
+                                    "type": "output_text",
+                                    "text": json.dumps(
+                                        {"questions": five_questions()}
+                                    ),
+                                    "annotations": [],
+                                }
+                            ],
+                        }
+                    ],
                 }
             ).encode("utf-8")
         )
@@ -182,6 +227,8 @@ class OpenAIQuestionServiceTests(TestCase):
         payload = json.loads(request.data)
         schema = payload["text"]["format"]["schema"]
         self.assertFalse(payload["store"])
+        self.assertEqual(payload["reasoning"]["effort"], "low")
+        self.assertEqual(payload["max_output_tokens"], 6000)
         self.assertTrue(payload["text"]["format"]["strict"])
         self.assertEqual(schema["properties"]["questions"]["minItems"], 5)
         self.assertEqual(schema["properties"]["questions"]["maxItems"], 5)

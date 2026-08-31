@@ -201,6 +201,45 @@ def _parse_questions(payload: dict) -> list[dict]:
     return questions
 
 
+def _response_output_text(payload: dict) -> str:
+    """Return text from either an SDK-style or canonical raw API response."""
+    sdk_output_text = payload.get("output_text")
+    if isinstance(sdk_output_text, str) and sdk_output_text.strip():
+        return sdk_output_text
+
+    text_parts = []
+    saw_refusal = False
+    for output_item in payload.get("output", []):
+        if not isinstance(output_item, dict) or output_item.get("type") != "message":
+            continue
+        for content_item in output_item.get("content", []):
+            if not isinstance(content_item, dict):
+                continue
+            if content_item.get("type") == "output_text" and isinstance(
+                content_item.get("text"), str
+            ):
+                text_parts.append(content_item["text"])
+            elif content_item.get("type") == "refusal":
+                saw_refusal = True
+
+    if text_parts:
+        return "".join(text_parts)
+    if saw_refusal:
+        raise QuestionGenerationError(
+            "OpenAI could not generate questions for this repository. Please review "
+            "the upload and try again."
+        )
+    if payload.get("status") == "incomplete":
+        reason = (payload.get("incomplete_details") or {}).get("reason")
+        if reason == "max_output_tokens":
+            raise QuestionGenerationError(
+                "OpenAI needed more room to finish the questions. Please try again."
+            )
+    raise QuestionGenerationError(
+        "OpenAI returned an unexpected result. Please try generating again."
+    )
+
+
 def generate_questions_for_repository(repository, user) -> GeneratedQuestionSet:
     """Generate exactly five grounded questions with the OpenAI Responses API."""
     api_key = settings.OPENAI_API_KEY
@@ -237,8 +276,9 @@ def generate_questions_for_repository(repository, user) -> GeneratedQuestionSet:
                 "schema": QUESTION_SCHEMA,
             }
         },
+        "reasoning": {"effort": "low"},
         "store": False,
-        "max_output_tokens": 3_000,
+        "max_output_tokens": 6_000,
         "safety_identifier": sha256(
             f"vivarepo-user-{user.pk}".encode("utf-8")
         ).hexdigest(),
@@ -256,7 +296,7 @@ def generate_questions_for_repository(repository, user) -> GeneratedQuestionSet:
     try:
         with urlopen(request, timeout=90) as response:
             response_payload = json.load(response)
-        structured_output = json.loads(response_payload["output_text"])
+        structured_output = json.loads(_response_output_text(response_payload))
     except HTTPError as exc:
         if exc.code == 401:
             message = "The OpenAI API key was rejected. Check the server configuration."
