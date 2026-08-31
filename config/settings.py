@@ -186,3 +186,6 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_QUESTION_MODEL = os.getenv("OPENAI_QUESTION_MODEL", "gpt-5.6-luna")

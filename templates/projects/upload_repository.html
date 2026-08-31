@@ -95,17 +95,46 @@
             </div>
             <div class="repository-list">
                 {% for repository in repositories %}
-                    <article class="repository-row">
-                        <div class="repository-icon" aria-hidden="true">&lt;/&gt;</div>
-                        <div>
-                            <h3>{{ repository.name }}</h3>
-                            <p>{{ repository.original_filename }} · {{ repository.size_bytes|filesizeformat }}</p>
-                        </div>
-                        <time datetime="{{ repository.uploaded_at|date:'c' }}">{{ repository.uploaded_at|date:"M j, Y" }}</time>
-                    </article>
+                    {% if repository.question_set.status == "complete" %}
+                        <a class="repository-row repository-row-action" href="{% url 'projects:repository_detail' repository.pk %}">
+                            <div class="repository-icon" aria-hidden="true">&lt;/&gt;</div>
+                            <div>
+                                <h3>{{ repository.name }}</h3>
+                                <p>{{ repository.original_filename }} · {{ repository.size_bytes|filesizeformat }}</p>
+                            </div>
+                            <span class="repository-next">View questions <span aria-hidden="true">→</span></span>
+                        </a>
+                    {% else %}
+                        <form class="repository-row-form" method="post" action="{% url 'projects:generate_repository_questions' repository.pk %}" data-generate-form>
+                            {% csrf_token %}
+                            <button class="repository-row repository-row-action" type="submit" aria-label="Generate five questions for {{ repository.name }}">
+                                <div class="repository-icon" aria-hidden="true">&lt;/&gt;</div>
+                                <div>
+                                    <h3>{{ repository.name }}</h3>
+                                    <p>{{ repository.original_filename }} · {{ repository.size_bytes|filesizeformat }}</p>
+                                </div>
+                                <span class="repository-next" data-generate-label>
+                                    {% if repository.question_set.status == "generating" %}Generating…{% else %}Generate questions <span aria-hidden="true">→</span>{% endif %}
+                                </span>
+                            </button>
+                        </form>
+                    {% endif %}
                 {% endfor %}
             </div>
         </section>
     {% endif %}
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll("[data-generate-form]").forEach((form) => {
+        form.addEventListener("submit", () => {
+            const button = form.querySelector("button");
+            const label = form.querySelector("[data-generate-label]");
+            button.disabled = true;
+            label.textContent = "Generating questions…";
+        });
+    });
+</script>
 {% endblock %}

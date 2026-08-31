@@ -16,6 +16,16 @@ urlpatterns = [
         views.upload_repository,
         name="upload_repository",
     ),
+    path(
+        "repositories/<int:repository_id>/",
+        views.repository_detail,
+        name="repository_detail",
+    ),
+    path(
+        "repositories/<int:repository_id>/generate-questions/",
+        views.generate_repository_questions,
+        name="generate_repository_questions",
+    ),
     path("signup/", views.signup, name="signup"),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),

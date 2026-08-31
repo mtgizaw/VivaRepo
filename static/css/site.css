@@ -677,12 +677,44 @@ h1 {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
+    width: 100%;
     gap: 1rem;
     padding: 1rem 1.5rem;
 }
 
-.repository-row + .repository-row {
+.repository-list > * + * {
     border-top: 1px solid #edf0f5;
+}
+
+.repository-row-form {
+    margin: 0;
+}
+
+.repository-row-action {
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 150ms ease;
+}
+
+.repository-row-action:hover {
+    background: #f6f8ff;
+}
+
+.repository-row-action:focus-visible {
+    position: relative;
+    z-index: 1;
+    outline: 3px solid rgba(49, 85, 217, 0.25);
+    outline-offset: -3px;
+}
+
+.repository-row-action:disabled {
+    cursor: wait;
+    opacity: 0.72;
 }
 
 .repository-icon {
@@ -711,9 +743,197 @@ h1 {
 }
 
 .repository-row p,
-.repository-row time {
+.repository-next {
     color: #71809a;
     font-size: 0.8rem;
+}
+
+.repository-next {
+    color: #3155d9;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.assessment-page {
+    max-width: 860px;
+    margin: clamp(2.5rem, 7vh, 5rem) auto 5rem;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 1.5rem;
+    color: #40516f;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    color: #3155d9;
+}
+
+.assessment-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.assessment-heading .eyebrow {
+    margin: 0 0 0.6rem;
+}
+
+.assessment-heading h1 {
+    font-size: clamp(2.5rem, 7vw, 4.5rem);
+}
+
+.assessment-heading > div > p:last-child {
+    margin: 0.8rem 0 0;
+    color: #65748c;
+}
+
+.question-count {
+    flex: 0 0 auto;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #ccd7f6;
+    border-radius: 999px;
+    color: #2647bd;
+    background: #edf2ff;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.question-intro {
+    margin-bottom: 1.25rem;
+}
+
+.question-intro h2,
+.question-intro p {
+    margin: 0;
+}
+
+.question-intro h2 {
+    color: #101a32;
+    font-size: 1.35rem;
+}
+
+.question-intro p {
+    margin-top: 0.45rem;
+    color: #65748c;
+    line-height: 1.55;
+}
+
+.question-list {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.question-card,
+.assessment-empty {
+    border: 1px solid #dce3ef;
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 18px 42px rgba(31, 49, 86, 0.08);
+}
+
+.question-card {
+    padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.question-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #3155d9;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.question-card h2 {
+    margin: 0.9rem 0 1.1rem;
+    color: #17233c;
+    font-size: clamp(1.1rem, 3vw, 1.35rem);
+    line-height: 1.45;
+}
+
+.question-card details {
+    color: #65748c;
+    font-size: 0.82rem;
+}
+
+.question-card summary {
+    color: #40516f;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.question-card ul {
+    margin: 0.65rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.question-card code {
+    color: #31415e;
+    overflow-wrap: anywhere;
+}
+
+.generation-note {
+    margin: 1.25rem 0 0;
+    color: #71809a;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.assessment-empty {
+    display: grid;
+    justify-items: center;
+    padding: clamp(2.5rem, 8vw, 5rem) 1.5rem;
+    text-align: center;
+}
+
+.assessment-empty h2 {
+    margin: 1.2rem 0 0;
+    color: #101a32;
+    font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+.assessment-empty > p {
+    max-width: 520px;
+    margin: 0.75rem 0 1.5rem;
+    color: #65748c;
+    line-height: 1.6;
+}
+
+.generate-button {
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.generate-button:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.loading-mark {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 4px solid #dce4fb;
+    border-top-color: #3155d9;
+    border-radius: 50%;
+    animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 @media (max-width: 600px) {
@@ -758,8 +978,13 @@ h1 {
         grid-template-columns: auto minmax(0, 1fr);
     }
 
-    .repository-row time {
+    .repository-next {
         display: none;
+    }
+
+    .assessment-heading {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
 

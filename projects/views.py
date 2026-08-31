@@ -1,18 +1,28 @@
 """Views for the VivaRepo web experience and local authentication."""
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 import plotly.graph_objects as go
 from plotly.io import to_html
 
+from ai.repository_questions import (
+    QuestionGenerationError,
+    generate_questions_for_repository,
+)
+from assessments.models import FreeResponseQuestion, QuestionSet
+
 from .forms import EmailLoginForm, RepositoryUploadForm, SignupForm
+from .models import Repository
 
 
 User = get_user_model()
@@ -153,12 +163,110 @@ def upload_repository(request: HttpRequest) -> HttpResponse:
         )
         return redirect("projects:upload_repository")
 
-    repositories = request.user.repositories.all()[:6]
+    repositories = request.user.repositories.select_related("question_set").all()[:6]
     return render(
         request,
         "projects/upload_repository.html",
         {"form": form, "repositories": repositories},
     )
+
+
+@login_required
+def repository_detail(request: HttpRequest, repository_id: int) -> HttpResponse:
+    """Show a user's repository and its generated free-response questions."""
+    repository = get_object_or_404(
+        Repository,
+        pk=repository_id,
+        uploaded_by=request.user,
+    )
+    question_set = getattr(repository, "question_set", None)
+    questions = (
+        question_set.questions.all()
+        if question_set and question_set.status == QuestionSet.Status.COMPLETE
+        else []
+    )
+    return render(
+        request,
+        "projects/repository_detail.html",
+        {
+            "repository": repository,
+            "question_set": question_set,
+            "questions": questions,
+        },
+    )
+
+
+@login_required
+@require_POST
+def generate_repository_questions(
+    request: HttpRequest,
+    repository_id: int,
+) -> HttpResponse:
+    """Generate and persist one five-question assessment for a repository."""
+    repository = get_object_or_404(
+        Repository,
+        pk=repository_id,
+        uploaded_by=request.user,
+    )
+    question_set, created = QuestionSet.objects.get_or_create(
+        repository=repository,
+        defaults={
+            "generated_by": request.user,
+            "model_name": settings.OPENAI_QUESTION_MODEL,
+            "status": QuestionSet.Status.GENERATING,
+        },
+    )
+    if not created and question_set.status == QuestionSet.Status.COMPLETE:
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+    if not created and question_set.status == QuestionSet.Status.GENERATING:
+        messages.info(request, "Question generation is already in progress.")
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+
+    if not created:
+        question_set.status = QuestionSet.Status.GENERATING
+        question_set.error_message = ""
+        question_set.save(update_fields=("status", "error_message"))
+
+    try:
+        generated = generate_questions_for_repository(repository, request.user)
+    except QuestionGenerationError as exc:
+        question_set.status = QuestionSet.Status.FAILED
+        question_set.error_message = str(exc)
+        question_set.save(update_fields=("status", "error_message"))
+        return redirect("projects:repository_detail", repository_id=repository.pk)
+
+    with transaction.atomic():
+        question_set.questions.all().delete()
+        FreeResponseQuestion.objects.bulk_create(
+            [
+                FreeResponseQuestion(
+                    question_set=question_set,
+                    position=position,
+                    prompt=question["prompt"],
+                    focus_area=question["focus_area"][:120],
+                    reference_answer=question["reference_answer"],
+                    source_files=question["source_files"],
+                )
+                for position, question in enumerate(generated.questions, start=1)
+            ]
+        )
+        question_set.status = QuestionSet.Status.COMPLETE
+        question_set.model_name = generated.model_name
+        question_set.response_id = generated.response_id
+        question_set.error_message = ""
+        question_set.completed_at = timezone.now()
+        question_set.save(
+            update_fields=(
+                "status",
+                "model_name",
+                "response_id",
+                "error_message",
+                "completed_at",
+            )
+        )
+
+    messages.success(request, "Five free-response questions are ready.")
+    return redirect("projects:repository_detail", repository_id=repository.pk)
 
 
 @require_POST

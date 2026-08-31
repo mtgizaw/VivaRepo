@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ repository.name }} Questions | VivaRepo{% endblock %}
+
+{% block content %}
+<section class="assessment-page" aria-labelledby="assessment-title">
+    <a class="back-link" href="{% url 'projects:upload_repository' %}"><span aria-hidden="true">←</span> Back to uploads</a>
+
+    <header class="assessment-heading">
+        <div>
+            <p class="eyebrow">Repository assessment</p>
+            <h1 id="assessment-title">{{ repository.name }}</h1>
+            <p>{{ repository.original_filename }} · {{ repository.size_bytes|filesizeformat }}</p>
+        </div>
+        {% if question_set.status == "complete" %}
+            <span class="question-count">5 questions</span>
+        {% endif %}
+    </header>
+
+    {% if question_set.status == "complete" %}
+        <div class="question-intro">
+            <h2>Free-response questions</h2>
+            <p>Explain your reasoning in your own words. Each question is grounded in this repository.</p>
+        </div>
+        <ol class="question-list">
+            {% for question in questions %}
+                <li class="question-card">
+                    <div class="question-meta">
+                        <span>Question {{ question.position }}</span>
+                        <span>{{ question.focus_area }}</span>
+                    </div>
+                    <h2>{{ question.prompt }}</h2>
+                    <details>
+                        <summary>Source files</summary>
+                        <ul>
+                            {% for source_file in question.source_files %}<li><code>{{ source_file }}</code></li>{% endfor %}
+                        </ul>
+                    </details>
+                </li>
+            {% endfor %}
+        </ol>
+        <p class="generation-note">Generated with {{ question_set.model_name }} on {{ question_set.completed_at|date:"M j, Y" }}.</p>
+    {% elif question_set.status == "generating" %}
+        <div class="assessment-empty">
+            <div class="loading-mark" aria-hidden="true"></div>
+            <h2>Generating your questions</h2>
+            <p>VivaRepo is reading the repository and preparing five grounded free-response questions.</p>
+        </div>
+    {% else %}
+        <div class="assessment-empty">
+            <div class="repository-icon" aria-hidden="true">&lt;/&gt;</div>
+            <h2>{% if question_set.status == "failed" %}Generation needs another try{% else %}Ready to explore this repository?{% endif %}</h2>
+            <p>{% if question_set.error_message %}{{ question_set.error_message }}{% else %}Generate five questions that test your understanding of the uploaded code.{% endif %}</p>
+            <form method="post" action="{% url 'projects:generate_repository_questions' repository.pk %}" data-generate-form>
+                {% csrf_token %}
+                <button class="button button-primary generate-button" type="submit" data-generate-label>
+                    {% if question_set.status == "failed" %}Try again{% else %}Generate five questions{% endif %}
+                </button>
+            </form>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll("[data-generate-form]").forEach((form) => {
+        form.addEventListener("submit", () => {
+            const button = form.querySelector("button");
+            button.disabled = true;
+            button.textContent = "Generating questions…";
+        });
+    });
+</script>
+{% endblock %}
