@@ -1,15 +1,18 @@
 """Views for the VivaRepo web experience and local authentication."""
 
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 import plotly.graph_objects as go
 from plotly.io import to_html
 
-from .forms import EmailLoginForm, SignupForm
+from .forms import EmailLoginForm, RepositoryUploadForm, SignupForm
 
 
 User = get_user_model()
@@ -102,19 +105,60 @@ def signup(request: HttpRequest) -> HttpResponse:
     return render(request, "projects/signup.html", {"form": form})
 
 
+def _safe_next_url(request: HttpRequest) -> str | None:
+    """Return a local post-authentication destination, when one was supplied."""
+    next_url = request.POST.get("next") or request.GET.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return None
+
+
 def login_view(request: HttpRequest) -> HttpResponse:
     """Authenticate a local account using its email address."""
+    next_url = _safe_next_url(request)
     if request.user.is_authenticated:
-        return redirect("projects:home")
+        return redirect(next_url or "projects:home")
 
     form = EmailLoginForm(request, data=request.POST or None)
     if request.method == "POST" and form.is_valid():
         auth_login(request, form.get_user())
         if not form.cleaned_data["remember_me"]:
             request.session.set_expiry(0)
-        return redirect("projects:home")
+        return redirect(next_url or "projects:home")
 
-    return render(request, "projects/login.html", {"form": form})
+    return render(
+        request,
+        "projects/login.html",
+        {"form": form, "next": next_url or ""},
+    )
+
+
+@login_required
+def upload_repository(request: HttpRequest) -> HttpResponse:
+    """Accept a ZIP archive and associate it with the signed-in user."""
+    form = RepositoryUploadForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        repository = form.save(commit=False)
+        repository.uploaded_by = request.user
+        repository.original_filename = form.cleaned_data["archive"].name
+        repository.size_bytes = form.cleaned_data["archive"].size
+        repository.save()
+        messages.success(
+            request,
+            f'"{repository.name}" was uploaded and is ready for analysis.',
+        )
+        return redirect("projects:upload_repository")
+
+    repositories = request.user.repositories.all()[:6]
+    return render(
+        request,
+        "projects/upload_repository.html",
+        {"form": form, "repositories": repositories},
+    )
 
 
 @require_POST

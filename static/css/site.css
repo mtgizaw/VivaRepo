@@ -272,6 +272,30 @@ h1 {
     font: inherit;
 }
 
+.form-field textarea {
+    width: 100%;
+    min-height: 7rem;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid #cfd7e6;
+    border-radius: 0.65rem;
+    color: #14213d;
+    background: #fff;
+    font: inherit;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.form-field textarea::placeholder {
+    color: #8995a9;
+}
+
+.form-field textarea:focus,
+.form-field input[type="file"]:focus-visible {
+    outline: 3px solid rgba(49, 85, 217, 0.2);
+    outline-offset: 2px;
+    border-color: #3155d9;
+}
+
 .form-field input::placeholder {
     color: #8995a9;
 }
@@ -458,6 +482,220 @@ h1 {
     text-align: center;
 }
 
+.upload-page {
+    max-width: 980px;
+    margin: clamp(2.5rem, 7vh, 5rem) auto 5rem;
+}
+
+.upload-heading {
+    max-width: 700px;
+    margin-bottom: 2rem;
+}
+
+.upload-heading .eyebrow {
+    margin: 0 0 0.75rem;
+}
+
+.upload-heading h1 {
+    font-size: clamp(2.75rem, 7vw, 4.8rem);
+}
+
+.upload-heading > p:last-child {
+    max-width: 650px;
+    margin: 1rem 0 0;
+    color: #596983;
+    font-size: 1.1rem;
+    line-height: 1.65;
+}
+
+.notice {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+}
+
+.notice-success {
+    border: 1px solid #a8dcc6;
+    color: #166345;
+    background: #edf9f3;
+}
+
+.upload-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.upload-card,
+.guide-card,
+.recent-repositories {
+    border: 1px solid #dce3ef;
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 20px 50px rgba(31, 49, 86, 0.09);
+}
+
+.upload-card {
+    padding: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.upload-form {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.optional {
+    color: #71809a;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.file-drop {
+    display: grid;
+    justify-items: center;
+    gap: 0.65rem;
+    padding: 1.5rem;
+    border: 1.5px dashed #aab8d0;
+    border-radius: 0.85rem;
+    color: #3155d9;
+    background: #f7f9ff;
+    text-align: center;
+}
+
+.file-drop input {
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.file-drop input::file-selector-button {
+    margin-right: 0.75rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid #cbd5e7;
+    border-radius: 0.55rem;
+    color: #24324b;
+    background: white;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.file-drop small {
+    color: #71809a;
+}
+
+.upload-submit {
+    width: 100%;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.upload-sidebar {
+    display: grid;
+    gap: 1rem;
+}
+
+.guide-card {
+    padding: 1.25rem;
+}
+
+.guide-number {
+    margin: 0 0 1rem;
+    color: #3155d9;
+    font-size: 0.78rem;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+}
+
+.guide-card h2 {
+    margin: 0;
+    color: #101a32;
+    font-size: 1rem;
+}
+
+.guide-card > p:last-child {
+    margin: 0.6rem 0 0;
+    color: #65748c;
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.recent-repositories {
+    margin-top: 1.25rem;
+    overflow: hidden;
+}
+
+.section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.4rem 1.5rem;
+    border-bottom: 1px solid #e4e9f2;
+}
+
+.section-heading .eyebrow {
+    margin: 0 0 0.35rem;
+}
+
+.section-heading h2 {
+    margin: 0;
+    color: #101a32;
+    font-size: 1.4rem;
+}
+
+.section-heading > span {
+    color: #71809a;
+    font-size: 0.82rem;
+}
+
+.repository-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+}
+
+.repository-row + .repository-row {
+    border-top: 1px solid #edf0f5;
+}
+
+.repository-icon {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: 0.65rem;
+    color: #3155d9;
+    background: #edf2ff;
+    font-size: 0.78rem;
+    font-weight: 850;
+}
+
+.repository-row h3,
+.repository-row p {
+    margin: 0;
+}
+
+.repository-row h3 {
+    overflow: hidden;
+    color: #1c2942;
+    font-size: 0.95rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.repository-row p,
+.repository-row time {
+    color: #71809a;
+    font-size: 0.8rem;
+}
+
 @media (max-width: 600px) {
     .site-header,
     main {
@@ -486,5 +724,27 @@ h1 {
     .metric-details {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .upload-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .upload-sidebar {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .repository-row {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .repository-row time {
+        display: none;
+    }
+}
+
+@media (max-width: 430px) {
+    .upload-sidebar {
+        grid-template-columns: 1fr;
     }
 }
