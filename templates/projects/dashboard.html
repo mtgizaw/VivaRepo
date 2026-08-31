@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Account Dashboard | VivaRepo{% endblock %}
+{% block title %}Dashboard | VivaRepo{% endblock %}
 
 {% block content %}
 <section class="dashboard" aria-labelledby="dashboard-title">
     <header class="dashboard-heading">
-        <p class="eyebrow">Community snapshot</p>
-        <h1 id="dashboard-title">VivaRepo accounts</h1>
+        <h1 id="dashboard-title">VivaRepo Dashboard</h1>
         <p>
-            A live view of how many people have registered for VivaRepo.
+            A live view of how people engage with VivaRepo.
         </p>
     </header>
 
@@ -19,15 +18,6 @@
         <noscript>
             <p class="metric-fallback">{{ account_count }}</p>
         </noscript>
-        <div class="metric-details">
-            <span class="status-chip"><span aria-hidden="true"></span>Live</span>
-            <p>Counts every account in VivaRepo's configured Django user model.</p>
-        </div>
     </article>
-
-    <p class="dashboard-note">
-        This total refreshes whenever the dashboard is loaded. No personal account
-        information is displayed.
-    </p>
 </section>
 {% endblock %}
